@@ -11,7 +11,14 @@ app.use(express.urlencoded({ limit: '100mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Xử lý chống lỗi ENOTDIR: Kiểm tra nếu 'uploads' tồn tại nhưng không phải là thư mục thì xóa đi để tạo mới
 const uploadDir = path.join(__dirname, 'uploads');
+if (fs.existsSync(uploadDir)) {
+    const stats = fs.statSync(uploadDir);
+    if (!stats.isDirectory()) {
+        fs.unlinkSync(uploadDir);
+    }
+}
 if (!fs.existsSync(uploadDir)){
     fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -22,7 +29,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 10 * 1024 * 1024 } // Giới hạn mỗi ảnh tối đa 10MB
+    limits: { fileSize: 10 * 1024 * 1024 } // Giới hạn 10MB mỗi ảnh
 });
 
 let reports = [];
@@ -57,7 +64,7 @@ app.delete('/api/reports/:id', (req, res) => {
     res.json({ success: true, message: 'Đã xóa báo cáo thành công!' });
 });
 
-// API Nhận báo cáo từ mobile với bọc xử lý lỗi an toàn tuyệt đối
+// API Nhận báo cáo từ mobile
 app.post('/api/reports', (req, res) => {
     upload.any()(req, res, function (err) {
         if (err) {
