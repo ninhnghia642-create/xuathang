@@ -6,8 +6,8 @@ const fs = require('fs');
 const multer = require('multer');
 const XLSX = require('xlsx');
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -20,7 +20,10 @@ const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname))
 });
-const upload = multer({ storage: storage });
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 10 * 1024 * 1024 } // Giới hạn mỗi ảnh tối đa 10MB
+});
 
 let reports = [];
 let users = [
@@ -29,12 +32,16 @@ let users = [
 
 // API Đăng nhập
 app.post('/api/login', (req, res) => {
-    const { username, password } = req.body;
-    const user = users.find(u => u.username === username && u.password === password);
-    if (user) {
-        res.json({ success: true, user: { username: user.username, fullName: user.fullName, role: user.role } });
-    } else {
-        res.status(401).json({ success: false, message: 'Sai tên đăng nhập hoặc mật khẩu!' });
+    try {
+        const { username, password } = req.body;
+        const user = users.find(u => u.username === username && u.password === password);
+        if (user) {
+            res.json({ success: true, user: { username: user.username, fullName: user.fullName, role: user.role } });
+        } else {
+            res.status(401).json({ success: false, message: 'Sai tên đăng nhập hoặc mật khẩu!' });
+        }
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
     }
 });
 
@@ -50,20 +57,25 @@ app.delete('/api/reports/:id', (req, res) => {
     res.json({ success: true, message: 'Đã xóa báo cáo thành công!' });
 });
 
-// API Nhận báo cáo từ mobile (hỗ trợ nhận tối đa các file ảnh)
-app.post('/api/reports', upload.any(), (req, res) => {
-    try {
-        const newReport = {
-            id: Date.now(),
-            createdAt: new Date().toISOString(),
-            data: req.body,
-            files: req.files ? req.files.map(f => ({ fieldname: f.fieldname, filename: f.filename })) : []
-        };
-        reports.unshift(newReport);
-        res.json({ success: true, message: 'Gửi báo cáo thành công!' });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
+// API Nhận báo cáo từ mobile với bọc xử lý lỗi an toàn tuyệt đối
+app.post('/api/reports', (req, res) => {
+    upload.any()(req, res, function (err) {
+        if (err) {
+            return res.status(400).json({ success: false, message: 'Lỗi tải ảnh lên: ' + err.message });
+        }
+        try {
+            const newReport = {
+                id: Date.now(),
+                createdAt: new Date().toISOString(),
+                data: req.body || {},
+                files: req.files ? req.files.map(f => ({ fieldname: f.fieldname, filename: f.filename })) : []
+            };
+            reports.unshift(newReport);
+            return res.json({ success: true, message: 'Gửi báo cáo thành công!' });
+        } catch (e) {
+            return res.status(500).json({ success: false, message: 'Lỗi xử lý server: ' + e.message });
+        }
+    });
 });
 
 // API Xuất file Excel ra máy tính từ template.xls gốc
