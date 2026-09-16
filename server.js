@@ -91,7 +91,7 @@ app.get('/api/export/:id', (req, res) => {
         const reportId = Number(req.params.id);
         const report = reports.find(r => r.id === reportId);
         
-        const templatePath = path.resolve(__dirname, 'template.xls');
+        const templatePath = path.resolve(__dirname, 'template.xls.xls');
         if (!fs.existsSync(templatePath)) {
             return res.status(404).send(`Lỗi xuất file: File not found: ${templatePath}`);
         }
