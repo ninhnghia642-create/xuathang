@@ -1,142 +1,101 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const multer = require('multer');
+const app = express();
+const http = require('http').createServer(app);
 const path = require('path');
 const fs = require('fs');
-const ExcelJS = require('exceljs');
+const multer = require('multer');
 const XLSX = require('xlsx');
 
-const app = express();
-app.use(cors());
-app.use(bodyParser.json({ limit: '50mb' }));
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
-app.use(express.static('public'));
-app.use('/uploads', express.static('uploads'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)){
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const dir = './uploads';
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-        cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + file.originalname);
-    }
+    destination: (req, file, cb) => cb(null, uploadDir),
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
 const upload = multer({ storage: storage });
 
+let reports = [];
 let users = [
     { username: 'admin', password: 'Ab@123456', fullName: 'Quản trị viên', role: 'admin' }
 ];
-let reports = [];
 
 // API Đăng nhập
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     const user = users.find(u => u.username === username && u.password === password);
     if (user) {
-        res.json({ success: true, role: user.role, fullName: user.fullName });
+        res.json({ success: true, user: { username: user.username, fullName: user.fullName, role: user.role } });
     } else {
-        res.status(401).json({ success: false, message: 'Sai tài khoản hoặc mật khẩu!' });
+        res.status(401).json({ success: false, message: 'Sai tên đăng nhập hoặc mật khẩu!' });
     }
 });
 
-// API Admin tạo tài khoản nhân viên
-app.post('/api/users', (req, res) => {
-    const { username, password, fullName } = req.body;
-    if (users.some(u => u.username === username)) {
-        return res.status(400).json({ success: false, message: 'Tên đăng nhập đã tồn tại!' });
-    }
-    users.push({ username, password, fullName, role: 'member' });
-    res.json({ success: true, message: 'Tạo tài khoản thành công!' });
-});
-
-app.get('/api/users', (req, res) => {
-    res.json(users.filter(u => u.role === 'member'));
-});
-
-// API Lấy cấu trúc form từ file template.xls để hiển thị đúng mẫu trên điện thoại
-app.get('/api/template-structure', (req, res) => {
-    try {
-        const templatePath = path.resolve(__dirname, 'template.xls');
-        const workbook = XLSX.readFile(templatePath);
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-        // Lọc ra các hạng mục kiểm tra từ file mẫu để gửi về điện thoại render form
-        res.json({ success: true, data: data.slice(0, 15) }); // Gửi các dòng tiêu đề và hạng mục chính
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// API Nhân viên gửi báo cáo
-app.post('/api/reports', upload.any(), (req, res) => {
-    try {
-        const reportData = JSON.parse(req.body.data || '{}');
-        reportData.id = Date.now();
-        reportData.createdAt = new Date().toLocaleString();
-        reportData.images = req.files.map(file => ({
-            fieldname: file.fieldname,
-            path: file.path
-        }));
-
-        reports.push(reportData);
-        res.json({ success: true, message: 'Gửi báo cáo thành công!' });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
+// API Lấy danh sách báo cáo
 app.get('/api/reports', (req, res) => {
     res.json(reports);
 });
 
-// API Xuất file Excel chuẩn mẫu kèm nhúng ảnh
-app.get('/api/export/:id', async (req, res) => {
+// API Xóa báo cáo
+app.delete('/api/reports/:id', (req, res) => {
+    const id = Number(req.params.id);
+    reports = reports.filter(r => r.id !== id);
+    res.json({ success: true, message: 'Đã xóa báo cáo thành công!' });
+});
+
+// API Nhận báo cáo từ mobile
+app.post('/api/reports', upload.any(), (req, res) => {
+    try {
+        const newReport = {
+            id: Date.now(),
+            createdAt: new Date().toISOString(),
+            data: req.body,
+            files: req.files ? req.files.map(f => f.filename) : []
+        };
+        reports.unshift(newReport);
+        res.json({ success: true, message: 'Gửi báo cáo thành công!' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// API Xuất file Excel ra máy tính từ template.xls gốc
+app.get('/api/export/:id', (req, res) => {
     try {
         const reportId = Number(req.params.id);
         const report = reports.find(r => r.id === reportId);
-        if (!report) return res.status(404).send('Không tìm thấy báo cáo!');
-
+        
         const templatePath = path.resolve(__dirname, 'template.xls');
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(templatePath);
-        const worksheet = workbook.getWorksheet(1);
-
-        // Điền dữ liệu PO và Xưởng vào đúng vị trí theo file template
-        worksheet.getCell('D2').value = report.poNumber || '';
-        worksheet.getCell('B2').value = report.workshop || '';
-
-        // Nhúng ảnh vào file Excel
-        if (report.images && report.images.length > 0) {
-            report.images.forEach((imgObj, index) => {
-                const imgPath = path.resolve(__dirname, imgObj.path);
-                if (fs.existsSync(imgPath)) {
-                    const imageId = workbook.addImage({
-                        filename: imgPath,
-                        extension: 'jpeg',
-                    });
-                    worksheet.addImage(imageId, {
-                        tl: { col: 4, row: 15 + (index * 4) },
-                        ext: { width: 140, height: 110 }
-                    });
-                }
-            });
+        if (!fs.existsSync(templatePath)) {
+            return res.status(404).send(`Lỗi xuất file: File not found: ${templatePath}`);
         }
 
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename=BaoCao_PO_${report.poNumber || 'QC'}.xlsx`);
-        await workbook.xlsx.write(res);
-        res.end();
-    } catch (err) {
-        res.status(500).send('Lỗi xuất file: ' + err.message);
+        const workbook = XLSX.readFile(templatePath);
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+
+        if (report) {
+            if(sheet['C4']) sheet['C4'].v = report.data.factory || '';
+            if(sheet['F4']) sheet['F4'].v = report.data.po || '';
+        }
+
+        const outputPath = path.join(__dirname, `report_${reportId}.xls`);
+        XLSX.writeFile(workbook, outputPath);
+
+        res.download(outputPath, `Bao_Cao_Kiem_Tra_${reportId}.xls`, (err) => {
+            if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+        });
+    } catch (e) {
+        res.status(500).send('Lỗi xử lý file Excel: ' + e.message);
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server đang chạy tại cổng: ${PORT}`);
-});
+http.listen(PORT, () => console.log(`Server running on port ${PORT}`));

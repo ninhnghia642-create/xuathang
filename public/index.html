@@ -2,105 +2,118 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Trang Chủ Quản Trị - QC Admin</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
-        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: #007bff; color: white; }
-        input, button { padding: 8px; margin: 5px 0; }
-        button { background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-    </style>
+    <title>Quản Lý Báo Cáo Kho Ván Sàn</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-
-    <div id="login-section" class="card" style="max-width: 400px; margin: 50px auto;">
-        <h2>Đăng Nhập Quản Trị</h2>
-        <input type="text" id="username" placeholder="Tài khoản (admin)" style="width: 100%;"><br>
-        <input type="password" id="password" placeholder="Mật khẩu" style="width: 100%;"><br>
-        <button onclick="login()" style="width: 100%;">Đăng Nhập</button>
+<body class="bg-light">
+    <!-- Login Modal -->
+    <div id="loginSection" class="container mt-5" style="max-width: 400px; display: none;">
+        <div class="card shadow p-4">
+            <h3 class="text-center mb-3">Đăng Nhập Quản Trị</h3>
+            <div class="mb-3">
+                <label>Tài khoản</label>
+                <input type="text" id="username" class="form-control" value="admin">
+            </div>
+            <div class="mb-3">
+                <label>Mật khẩu</label>
+                <input type="password" id="password" class="form-control" value="Ab@123456">
+            </div>
+            <button onclick="handleLogin()" class="btn btn-primary w-100">Đăng Nhập</button>
+        </div>
     </div>
 
-    <div id="admin-dashboard" class="card" style="display: none;">
-        <h2>Hệ Thống Quản Lý Kho Báo Cáo QC</h2>
-        <button onclick="logout()" style="background: #dc3545;">Đăng Xuất</button>
-        
-        <hr>
-        <h3>1. Tạo tài khoản cho nhân viên</h3>
-        <input type="text" id="new-user" placeholder="Tên đăng nhập">
-        <input type="password" id="new-pass" placeholder="Mật khẩu">
-        <input type="text" id="new-name" placeholder="Mã / Tên nhân viên">
-        <button onclick="createMember()">Tạo Tài Khoản</button>
-
-        <h3>2. Danh sách kho lưu trữ báo cáo từ điện thoại</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Mã PO</th>
-                    <th>Xưởng</th>
-                    <th>Nhân viên gửi</th>
-                    <th>Thời gian</th>
-                    <th>Thao tác xuất file</th>
-                </tr>
-            </thead>
-            <tbody id="report-table-body">
-                <!-- Dữ liệu đổ tự động -->
-            </tbody>
-        </table>
+    <!-- Main Dashboard -->
+    <div id="mainSection" class="container mt-4" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Quản Lý Báo Cáo Kiểm Tra Giám Sát Kho</h2>
+            <div>
+                <a href="/mobile.html" class="btn btn-warning me-2">Mở Form Nhập Liệu Mobile</a>
+                <button onclick="handleLogout()" class="btn btn-danger">Đăng Xuất</button>
+            </div>
+        </div>
+        <div class="card shadow p-3">
+            <h4>Danh Sách Báo Cáo Đã Gửi</h4>
+            <table class="table table-bordered table-striped mt-3">
+                <thead>
+                    <tr>
+                        <th>Thời Gian</th>
+                        <th>Xưởng / PO</th>
+                        <th>Hành Động</th>
+                    </tr>
+                </thead>
+                <tbody id="reportTableBody">
+                    <!-- Dữ liệu -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
-        async function login() {
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedUser = localStorage.getItem("qc_user");
+            if (savedUser) {
+                showDashboard();
+            } else {
+                document.getElementById("loginSection").style.display = "block";
+            }
+        });
+
+        async function handleLogin() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
             const res = await fetch('/api/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: u, password: p })
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
             });
             const data = await res.json();
-            if (data.success && data.role === 'admin') {
-                document.getElementById('login-section').style.display = 'none';
-                document.getElementById('admin-dashboard').style.display = 'block';
-                loadReports();
+            if (data.success) {
+                localStorage.setItem("qc_user", JSON.stringify(data.user));
+                showDashboard();
             } else {
-                alert('Đăng nhập thất bại hoặc không phải quyền Admin!');
+                alert(data.message);
             }
         }
 
-        function logout() { location.reload(); }
+        function handleLogout() {
+            localStorage.removeItem("qc_user");
+            location.reload();
+        }
 
-        async function createMember() {
-            const username = document.getElementById('new-user').value;
-            const password = document.getElementById('new-pass').value;
-            const fullName = document.getElementById('new-name').value;
-            const res = await fetch('/api/users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, fullName })
-            });
-            const data = await res.json();
-            alert(data.message);
+        function showDashboard() {
+            document.getElementById("loginSection").style.display = "none";
+            document.getElementById("mainSection").style.display = "block";
+            loadReports();
         }
 
         async function loadReports() {
             const res = await fetch('/api/reports');
             const reports = await res.json();
-            const tbody = document.getElementById('report-table-body');
-            tbody.innerHTML = '';
+            const tbody = document.getElementById("reportTableBody");
+            tbody.innerHTML = "";
+            if(reports.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">Chưa có báo cáo nào</td></tr>`;
+                return;
+            }
             reports.forEach(r => {
                 tbody.innerHTML += `
                     <tr>
-                        <td>${r.poNumber || 'N/A'}</td>
-                        <td>${r.workshop || 'N/A'}</td>
-                        <td>${r.employee || 'Nhân viên'}</td>
-                        <td>${r.createdAt}</td>
-                        <td><a href="/api/export/${r.id}"><button>Tải file Excel mẫu</button></a></td>
+                        <td>${new Date(r.createdAt).toLocaleString()}</td>
+                        <td>Xưởng: ${r.data.factory || 'N/A'} - PO: ${r.data.po || 'N/A'}</td>
+                        <td>
+                            <a href="/api/export/${r.id}" class="btn btn-success btn-sm me-2">Xuất Excel</a>
+                            <button onclick="deleteReport(${r.id})" class="btn btn-danger btn-sm">Xóa</button>
+                        </td>
                     </tr>
                 `;
             });
+        }
+
+        async function deleteReport(id) {
+            if(confirm("Bạn có chắc chắn muốn xóa báo cáo này không?")) {
+                await fetch(`/api/reports/${id}`, { method: 'DELETE' });
+                loadReports();
+            }
         }
     </script>
 </body>
