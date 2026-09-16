@@ -85,7 +85,7 @@ app.post('/api/reports', (req, res) => {
     });
 });
 
-// API Xuất file Excel điền dữ liệu và gắn tên/đường dẫn 18 ảnh vào đúng vị trí tương ứng
+// API Xuất file Excel an toàn tuyệt đối với 18 ô ảnh
 app.get('/api/export/:id', (req, res) => {
     try {
         const reportId = Number(req.params.id);
@@ -105,26 +105,28 @@ app.get('/api/export/:id', (req, res) => {
         const sheet = workbook.Sheets[sheetName];
 
         if (report && report.data) {
-            // 1. Điền thông tin metadata chính
+            // Điền thông tin cơ bản an toàn
             if(sheet['C4']) sheet['C4'].v = report.data.factory || '';
             if(sheet['F4']) sheet['F4'].v = report.data.po || '';
             if(sheet['F6']) sheet['F6'].v = report.data.inspector_id || '';
             if(sheet['C35']) sheet['C35'].v = report.data.evaluation || '合格';
             if(sheet['C36']) sheet['C36'].v = report.data.note || '';
 
-            // 2. Điền tên các file ảnh đã tải lên vào các ô phía dưới tiêu đề ảnh (Ví dụ phân bổ từ hàng 24, 26, 28...)
+            // Điền tên file ảnh vào 18 vị trí (tự động tạo ô nếu ô đó chưa tồn tại trong template)
             if (report.files && report.files.length > 0) {
-                // Ánh xạ danh sách file ảnh vào các ô cell tương ứng dựa theo thứ tự 18 ảnh
+                const cellKeys = [
+                    'A24', 'D24', 'G24', 'A26', 'D26', 'G26', 'A28', 'D28', 'G28',
+                    'A30', 'D30', 'G30', 'A32', 'D32', 'G32', 'A34', 'D34', 'G34'
+                ];
+                
                 report.files.forEach((file, index) => {
-                    // Bạn có thể tùy chỉnh các ô chứa tên ảnh, ví dụ: 
-                    // Ảnh 1 -> ô A24, Ảnh 2 -> ô D24, Ảnh 3 -> ô G24, v.v.
-                    // Ở đây ta lưu tên file trực tiếp để người xem biết ảnh nào khớp với mục nào
-                    const cellKeys = [
-                        'A24', 'D24', 'G24', 'A26', 'D26', 'G26', 'A28', 'D28', 'G28',
-                        'A30', 'D30', 'G30', 'A32', 'D32', 'G32', 'A34', 'D34', 'G34'
-                    ];
-                    if (index < cellKeys.length && sheet[cellKeys[index]]) {
-                        sheet[cellKeys[index]].v = `[Ảnh]: ${file.filename}`;
+                    if (index < cellKeys.length) {
+                        const cellKey = cellKeys[index];
+                        // Nếu ô chưa có trong sheet, khởi tạo kiểu dữ liệu string
+                        if (!sheet[cellKey]) {
+                            sheet[cellKey] = { t: 's', v: '' };
+                        }
+                        sheet[cellKey].v = `[Ảnh]: ${file.filename}`;
                     }
                 });
             }
