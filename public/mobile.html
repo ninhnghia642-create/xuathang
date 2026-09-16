@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Kiểm Tra Giám Sát Kho Ván Sàn - Chuẩn Mẫu</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 10px; color: #333; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #0056b3; font-size: 18px; margin-bottom: 2px; }
+        h3 { text-align: center; font-size: 13px; color: #666; margin-top: 0; }
+        .form-group { margin-bottom: 10px; }
+        label { font-weight: bold; font-size: 13px; display: block; margin-bottom: 3px; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
+        th, td { border: 1px solid #aaa; padding: 5px; text-align: center; }
+        th { background: #e9ecef; }
+        .img-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 5px; }
+        .img-box { border: 1px dashed #007bff; background: #f8f9fa; padding: 6px; text-align: center; border-radius: 6px; }
+        .plus-btn { display: inline-block; width: 35px; height: 35px; background: #fff; border: 2px dashed #007bff; text-align: center; line-height: 31px; font-size: 20px; color: #007bff; border-radius: 4px; cursor: pointer; margin-top: 4px; }
+        .preview-img { width: 45px; height: 45px; object-fit: cover; margin: 2px; border-radius: 4px; border: 1px solid #ddd; }
+        .submit-btn { width: 100%; background: #28a745; color: white; padding: 12px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; margin-top: 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <!-- MÀN HÌNH ĐĂNG NHẬP -->
+    <div id="login-screen" class="container">
+        <h2>ĐĂNG NHẬP NHÂN VIÊN QC</h2>
+        <div class="form-group" style="margin-top: 15px;">
+            <label>Tên đăng nhập:</label>
+            <input type="text" id="mb-user" placeholder="Nhập tài khoản nhân viên">
+        </div>
+        <div class="form-group">
+            <label>Mật khẩu:</label>
+            <input type="password" id="mb-pass" placeholder="Nhập mật khẩu">
+        </div>
+        <button class="submit-btn" onclick="memberLogin()">Đăng Nhập Hệ Thống</button>
+    </div>
+
+    <!-- MÀN HÌNH LÀM BÁO CÁO -->
+    <div id="report-screen" class="container" style="display: none;">
+        <h2>监装检验报告 - BÁO CÁO KIỂM TRA GIÁM SÁT KHO VÁN SÀN</h2>
+        <h3>Kho Ván Sàn Jufeng</h3>
+        <button onclick="location.reload()" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; float: right; font-size: 12px;">Đăng Xuất</button>
+        <div style="clear: both;"></div>
+
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <div style="flex: 1;">
+                <label>厂区 / Xưởng sản xuất:</label>
+                <input type="text" id="workshop" placeholder="Ví dụ: Xưởng A">
+            </div>
+            <div style="flex: 1;">
+                <label>发货PO / Mã PO xuất hàng:</label>
+                <input type="text" id="poNumber" placeholder="HLVN56188397">
+            </div>
+        </div>
+
+        <h4 style="margin: 12px 0 4px 0; color: #0056b3; font-size: 13px;">I. 外观检验 / Kiểm Tra Ngoại Quan</h4>
+        <table>
+            <tr>
+                <th>检验项目 / Hạng mục</th>
+                <th>标准要求 / Tiêu chuẩn</th>
+                <th>不合格品数 / Lỗi</th>
+                <th>检验项目 / Hạng mục</th>
+                <th>标准要求 / Tiêu chuẩn</th>
+                <th>不合格品数 / Lỗi</th>
+            </tr>
+            <tr>
+                <td>合同号核对<br>Đối chiếu mã hợp đồng</td>
+                <td>是</td>
+                <td><input type="text" value="无" style="text-align:center; padding:2px;"></td>
+                <td>塑钢带是否完好<br>Đai nhựa tốt?</td>
+                <td>是</td>
+                <td><input type="text" value="无" style="text-align:center; padding:2px;"></td>
+            </tr>
+            <tr>
+                <td>托盘是否发霉破损<br>Pallet mốc / hư hỏng?</td>
+                <td>否</td>
+                <td><input type="text" value="无" style="text-align:center; padding:2px;"></td>
+                <td>纸箱开胶<br>Thùng carton tách keo</td>
+                <td>否</td>
+                <td><input type="text" value="无" style="text-align:center; padding:2px;"></td>
+            </tr>
+            <tr>
+                <td>托盘是否钉子外漏<br>Đinh lộ ngoài pallet?</td>
+                <td>否</td>
+                <td><input type="text" value="无" style="text-align:center; padding:2px;"></td>
+                <td>纸箱破损 发霉<br>Thùng carton hư hỏng / mốc</td>
+                <td>否</td>
+                <td><input type="text" value="无" style="text-align:center; padding:2px;"></td>
+            </tr>
+            <tr>
+                <td>托盘底部档位木墩完好<br>Trụ gỗ pallet tốt?</td>
+                <td>是</td>
+                <td><input type="text" value="无" style="text-align:center; padding:2px;"></td>
+                <td>整托是否移位<br>Pallet có bị lệch?</td>
+                <td>否</td>
+                <td><input type="text" value="无" style="text-align:center; padding:2px;"></td>
+            </tr>
+            <tr>
+                <td>防伪标是否漏贴<br>Tem chống giả?</td>
+                <td>否</td>
+                <td><input type="text" value="无" style="text-align:center; padding:2px;"></td>
+                <td>盖板湿度<br>Độ ẩm ván đậy</td>
+                <td>否</td>
+                <td><input type="text" value="无" style="text-align:center; padding:2px;"></td>
+            </tr>
+            <tr>
+                <td>盖板是否发霉<br>Ván đậy có mốc?</td>
+                <td>否</td>
+                <td><input type="text" value="无" style="text-align:center; padding:2px;"></td>
+                <td>装柜是否淋雨<br>Đóng công dính mưa?</td>
+                <td>否</td>
+                <td><input type="text" value="无" style="text-align:center; padding:2px;"></td>
+            </tr>
+            <tr>
+                <td>外观潮湿<br>Bề ngoài ẩm ướt?</td>
+                <td>否</td>
+                <td><input type="text" value="无" style="text-align:center; padding:2px;"></td>
+                <td>缠绕膜是否有雨渍<br>Màng bọc có vết nước mưa?</td>
+                <td>否</td>
+                <td><input type="text" value="无" style="text-align:center; padding:2px;"></td>
+            </tr>
+        </table>
+
+        <h4 style="margin: 12px 0 4px 0; color: #0056b3; font-size: 13px;">II. 湿度记录 / Ghi Chép Độ Ẩm (Ván đậy & Pallet)</h4>
+        <div class="form-group">
+            <label>Nhập các giá trị độ ẩm đo thực tế (cách nhau dấu phẩy):</label>
+            <input type="text" id="humidityValues" placeholder="VD: 7.00, 10.00, 14.00, 13.00...">
+        </div>
+
+        <h4 style="margin: 12px 0 4px 0; color: #0056b3; font-size: 13px;">III. 现场照片 / Trọn Bộ Ảnh Minh Chứng (15 Vị Trí Theo Mẫu Gốc)</h4>
+        
+        <div class="img-grid">
+            <div class="img-box"><label style="font-size:10px;">1. 整数照片<br>Ảnh toàn đơn hàng</label><label class="plus-btn" for="img1">+</label><input type="file" id="img1" accept="image/*" style="display:none;" onchange="handleImage(event, 'p1')"><div id="p1"></div></div>
+            <div class="img-box"><label style="font-size:10px;">2. 托盘标照片<br>Ảnh tem pallet</label><label class="plus-btn" for="img2">+</label><input type="file" id="img2" accept="image/*" style="display:none;" onchange="handleImage(event, 'p2')"><div id="p2"></div></div>
+            <div class="img-box"><label style="font-size:10px;">3. 托盘含水率照片<br>Ảnh độ ẩm pallet</label><label class="plus-btn" for="img3">+</label><input type="file" id="img3" accept="image/*" style="display:none;" onchange="handleImage(event, 'p3')"><div id="p3"></div></div>
+            <div class="img-box"><label style="font-size:10px;">4. 盖板含水率照片<br>Ảnh độ ẩm ván đậy</label><label class="plus-btn" for="img4">+</label><input type="file" id="img4" accept="image/*" style="display:none;" onchange="handleImage(event, 'p4')"><div id="p4"></div></div>
+            <div class="img-box"><label style="font-size:10px;">5. 塑钢带缠绕膜<br>Ảnh đai nhựa & màng bọc</label><label class="plus-btn" for="img5">+</label><input type="file" id="img5" accept="image/*" style="display:none;" onchange="handleImage(event, 'p5')"><div id="p5"></div></div>
+            <div class="img-box"><label style="font-size:10px;">6. 装车照片<br>Ảnh đóng công</label><label class="plus-btn" for="img6">+</label><input type="file" id="img6" accept="image/*" style="display:none;" onchange="handleImage(event, 'p6')"><div id="p6"></div></div>
+            <div class="img-box"><label style="font-size:10px;">7. 是否淋雨<br>Ảnh trời mưa/ướt</label><label class="plus-btn" for="img7">+</label><input type="file" id="img7" accept="image/*" style="display:none;" onchange="handleImage(event, 'p7')"><div id="p7"></div></div>
+            <div class="img-box"><label style="font-size:10px;">8. 熏蒸章图片<br>Ảnh dấu hun trùng</label><label class="plus-btn" for="img8">+</label><input type="file" id="img8" accept="image/*" style="display:none;" onchange="handleImage(event, 'p8')"><div id="p8"></div></div>
+            <div class="img-box"><label style="font-size:10px;">9. 批次照片-1<br>Ảnh số lô pallet</label><label class="plus-btn" for="img9">+</label><input type="file" id="img9" accept="image/*" style="display:none;" onchange="handleImage(event, 'p9')"><div id="p9"></div></div>
+            <div class="img-box"><label style="font-size:10px;">10. 集装箱内部侧面<br>Ảnh hông contener</label><label class="plus-btn" for="img10">+</label><input type="file" id="img10" accept="image/*" style="display:none;" onchange="handleImage(event, 'p10')"><div id="p10"></div></div>
+            <div class="img-box"><label style="font-size:10px;">11. 空箱照片<br>Ảnh contener rỗng</label><label class="plus-btn" for="img11">+</label><input type="file" id="img11" accept="image/*" style="display:none;" onchange="handleImage(event, 'p11')"><div id="p11"></div></div>
+            <div class="img-box"><label style="font-size:10px;">12. 装满三分之一<br>Ảnh đóng 1/3 công</label><label class="plus-btn" for="img12">+</label><input type="file" id="img12" accept="image/*" style="display:none;" onchange="handleImage(event, 'p12')"><div id="p12"></div></div>
+            <div class="img-box"><label style="font-size:10px;">13. 装满二分之一<br>Ảnh đóng 1/2 công</label><label class="plus-btn" for="img13">+</label><input type="file" id="img13" accept="image/*" style="display:none;" onchange="handleImage(event, 'p13')"><div id="p13"></div></div>
+            <div class="img-box"><label style="font-size:10px;">14. 装满关一个门<br>Ảnh đóng 1 cửa công</label><label class="plus-btn" for="img14">+</label><input type="file" id="img14" accept="image/*" style="display:none;" onchange="handleImage(event, 'p14')"><div id="p14"></div></div>
+            <div class="img-box"><label style="font-size:10px;">15. 装满关门照片<br>Ảnh đóng toàn bộ cửa</label><label class="plus-btn" for="img15">+</label><input type="file" id="img15" accept="image/*" style="display:none;" onchange="handleImage(event, 'p15')"><div id="p15"></div></div>
+        </div>
+
+        <button class="submit-btn" onclick="submitReport()">Gửi Báo Cáo Về Trang Chủ</button>
+    </div>
+
+    <script>
+        let uploadedImages = {};
+
+        async function memberLogin() {
+            const u = document.getElementById('mb-user').value;
+            const p = document.getElementById('mb-pass').value;
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: u, password: p })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('report-screen').style.display = 'block';
+            } else {
+                alert('Sai tài khoản hoặc mật khẩu!');
+            }
+        }
+
+        function handleImage(event, previewId) {
+            const file = event.target.files[0];
+            if (file) {
+                uploadedImages[previewId] = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById(previewId).innerHTML = `<img src="${e.target.result}" class="preview-img">`;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function submitReport() {
+            const poNumber = document.getElementById('poNumber').value;
+            const workshop = document.getElementById('workshop').value;
+            const humidity = document.getElementById('humidityValues').value;
+
+            if (!poNumber || !workshop) {
+                alert('Vui lòng nhập đầy đủ Xưởng và Mã PO!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('data', JSON.stringify({ poNumber, workshop, humidity }));
+            
+            for (let key in uploadedImages) {
+                formData.append('images', uploadedImages[key]);
+            }
+
+            const res = await fetch('/api/reports', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) {
+                alert('Gửi báo cáo thành công!');
+                location.reload();
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        }
+    </script>
+</body>
+</html>

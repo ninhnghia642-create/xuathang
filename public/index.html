@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Trang Chủ Quản Trị - QC Admin</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #007bff; color: white; }
+        input, button { padding: 8px; margin: 5px 0; }
+        button { background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+
+    <div id="login-section" class="card" style="max-width: 400px; margin: 50px auto;">
+        <h2>Đăng Nhập Quản Trị</h2>
+        <input type="text" id="username" placeholder="Tài khoản (admin)" style="width: 100%;"><br>
+        <input type="password" id="password" placeholder="Mật khẩu" style="width: 100%;"><br>
+        <button onclick="login()" style="width: 100%;">Đăng Nhập</button>
+    </div>
+
+    <div id="admin-dashboard" class="card" style="display: none;">
+        <h2>Hệ Thống Quản Lý Kho Báo Cáo QC</h2>
+        <button onclick="logout()" style="background: #dc3545;">Đăng Xuất</button>
+        
+        <hr>
+        <h3>1. Tạo tài khoản cho nhân viên</h3>
+        <input type="text" id="new-user" placeholder="Tên đăng nhập">
+        <input type="password" id="new-pass" placeholder="Mật khẩu">
+        <input type="text" id="new-name" placeholder="Mã / Tên nhân viên">
+        <button onclick="createMember()">Tạo Tài Khoản</button>
+
+        <h3>2. Danh sách kho lưu trữ báo cáo từ điện thoại</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã PO</th>
+                    <th>Xưởng</th>
+                    <th>Nhân viên gửi</th>
+                    <th>Thời gian</th>
+                    <th>Thao tác xuất file</th>
+                </tr>
+            </thead>
+            <tbody id="report-table-body">
+                <!-- Dữ liệu đổ tự động -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function login() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: u, password: p })
+            });
+            const data = await res.json();
+            if (data.success && data.role === 'admin') {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('admin-dashboard').style.display = 'block';
+                loadReports();
+            } else {
+                alert('Đăng nhập thất bại hoặc không phải quyền Admin!');
+            }
+        }
+
+        function logout() { location.reload(); }
+
+        async function createMember() {
+            const username = document.getElementById('new-user').value;
+            const password = document.getElementById('new-pass').value;
+            const fullName = document.getElementById('new-name').value;
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, fullName })
+            });
+            const data = await res.json();
+            alert(data.message);
+        }
+
+        async function loadReports() {
+            const res = await fetch('/api/reports');
+            const reports = await res.json();
+            const tbody = document.getElementById('report-table-body');
+            tbody.innerHTML = '';
+            reports.forEach(r => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${r.poNumber || 'N/A'}</td>
+                        <td>${r.workshop || 'N/A'}</td>
+                        <td>${r.employee || 'Nhân viên'}</td>
+                        <td>${r.createdAt}</td>
+                        <td><a href="/api/export/${r.id}"><button>Tải file Excel mẫu</button></a></td>
+                    </tr>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
