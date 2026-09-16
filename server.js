@@ -85,15 +85,19 @@ app.post('/api/reports', (req, res) => {
     });
 });
 
-// API Xuất file Excel ra máy tính từ template.xls gốc (hỗ trợ ghi dữ liệu và đường dẫn/tên ảnh)
+// API Xuất file Excel điền dữ liệu và gắn tên/đường dẫn 18 ảnh vào đúng vị trí tương ứng
 app.get('/api/export/:id', (req, res) => {
     try {
         const reportId = Number(req.params.id);
         const report = reports.find(r => r.id === reportId);
         
-        const templatePath = path.resolve(__dirname, 'template.xls.xls');
+        let templatePath = path.resolve(__dirname, 'template.xls.xls');
         if (!fs.existsSync(templatePath)) {
-            return res.status(404).send(`Lỗi xuất file: File not found: ${templatePath}`);
+            templatePath = path.resolve(__dirname, 'template.xls');
+        }
+
+        if (!fs.existsSync(templatePath)) {
+            return res.status(404).send('Lỗi: Không tìm thấy file template mẫu Excel trên server.');
         }
 
         const workbook = XLSX.readFile(templatePath);
@@ -101,19 +105,27 @@ app.get('/api/export/:id', (req, res) => {
         const sheet = workbook.Sheets[sheetName];
 
         if (report && report.data) {
-            // 1. Điền thông tin cơ bản (Xưởng, PO...)
+            // 1. Điền thông tin metadata chính
             if(sheet['C4']) sheet['C4'].v = report.data.factory || '';
             if(sheet['F4']) sheet['F4'].v = report.data.po || '';
             if(sheet['F6']) sheet['F6'].v = report.data.inspector_id || '';
-            if(sheet['C32']) sheet['C32'].v = report.data.evaluation || '合格';
-            if(sheet['C33']) sheet['C33'].v = report.data.note || '';
+            if(sheet['C35']) sheet['C35'].v = report.data.evaluation || '合格';
+            if(sheet['C36']) sheet['C36'].v = report.data.note || '';
 
-            // 2. Gắn tên file ảnh hoặc đường dẫn vào các ô tương ứng nếu template có hỗ trợ
-            // Ví dụ lưu danh sách file ảnh vào các ô hoặc sheet phụ thuộc vào file template gốc của bạn
+            // 2. Điền tên các file ảnh đã tải lên vào các ô phía dưới tiêu đề ảnh (Ví dụ phân bổ từ hàng 24, 26, 28...)
             if (report.files && report.files.length > 0) {
+                // Ánh xạ danh sách file ảnh vào các ô cell tương ứng dựa theo thứ tự 18 ảnh
                 report.files.forEach((file, index) => {
-                    // Lưu thông tin tên file ảnh vào console hoặc log để kiểm tra
-                    console.log(`Ảnh ${index + 1}: ${file.filename}`);
+                    // Bạn có thể tùy chỉnh các ô chứa tên ảnh, ví dụ: 
+                    // Ảnh 1 -> ô A24, Ảnh 2 -> ô D24, Ảnh 3 -> ô G24, v.v.
+                    // Ở đây ta lưu tên file trực tiếp để người xem biết ảnh nào khớp với mục nào
+                    const cellKeys = [
+                        'A24', 'D24', 'G24', 'A26', 'D26', 'G26', 'A28', 'D28', 'G28',
+                        'A30', 'D30', 'G30', 'A32', 'D32', 'G32', 'A34', 'D34', 'G34'
+                    ];
+                    if (index < cellKeys.length && sheet[cellKeys[index]]) {
+                        sheet[cellKeys[index]].v = `[Ảnh]: ${file.filename}`;
+                    }
                 });
             }
         }
