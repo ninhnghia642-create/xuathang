@@ -9,7 +9,7 @@
         body { background-color: #f8f9fa; font-size: 14px; }
         .form-container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         .section-title { background: #e9ecef; padding: 10px; font-weight: bold; margin-top: 20px; border-left: 4px solid #0d6efd; }
-        .upload-box { border: 2px dashed #0d6efd; padding: 15px; text-align: center; border-radius: 6px; background: #fdfdfd; cursor: pointer; }
+        .upload-box { border: 2px dashed #0d6efd; padding: 12px; text-align: center; border-radius: 6px; background: #fdfdfd; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -67,10 +67,34 @@
                     <textarea name="humidity_values" class="form-control" rows="3" placeholder="7.00, 14.00, 10.00, 13.00..."></textarea>
                 </div>
 
-                <!-- III. Ảnh minh chứng (15 vị trí) -->
-                <div class="section-title">III. 现场照片 / Trọn Bộ Ảnh Minh Chứng (15 Vị Trí Theo Mẫu Gốc)</div>
+                <!-- III. Ảnh minh chứng (Đủ 18 vị trí theo mẫu gốc) -->
+                <div class="section-title">III. 现场照片 / Trọn Bộ Ảnh Minh Chứng (Đủ 18 Vị Trí)</div>
                 <div class="row g-3 mb-4" id="photoContainer">
-                    <!-- Sẽ tự động render 15 ô ảnh -->
+                    <!-- Sẽ tự động render 18 ô ảnh -->
+                </div>
+
+                <!-- IV. Đánh giá và thông tin nhân viên -->
+                <div class="section-title">IV. 判定与备注 / Đánh Giá & Ghi Chú</div>
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label fw-bold">外观判定 / Đánh giá ngoại quan:</label>
+                        <select name="evaluation" class="form-select">
+                            <option value="合格" selected>合格 (Đạt / Hợp cách)</option>
+                            <option value="不合格">不合格 (Không đạt)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label fw-bold">监仓员 / Mã số nhân viên giám sát kho:</label>
+                        <input type="text" name="inspector_id" class="form-control" value="6974" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">备注 / Ghi chú:</label>
+                        <input type="text" name="note" class="form-control" placeholder="Nhập ghi chú nếu có...">
+                    </div>
+                    <div class="col-md-6 mt-2">
+                        <label class="form-label fw-bold">检验日期 / Thời gian kiểm tra:</label>
+                        <input type="date" name="inspect_date" class="form-control" id="inspectDate">
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-success w-100 py-3 fw-bold fs-5">Gửi Báo Cáo Về Trang Chủ</button>
@@ -79,13 +103,17 @@
     </div>
 
     <script>
-        // Render 15 ô upload ảnh
+        // Đặt sẵn ngày hiện tại cho ô kiểm tra ngày
+        document.getElementById('inspectDate').valueAsDate = new Date();
+
+        // Danh sách chuẩn đủ 18 vị trí ảnh minh chứng theo file gốc
         const photoTitles = [
             "1. Ảnh toàn đơn hàng", "2. Ảnh tem pallet", "3. Ảnh độ ẩm pallet", 
             "4. Ảnh độ ẩm ván đậy", "5. Ảnh đai nhựa & màng bọc", "6. Ảnh đóng công", 
             "7. Ảnh trời mưa/ướt", "8. Ảnh dầu hun trùng", "9. Ảnh số lô pallet", 
             "10. Ảnh hông contener", "11. Ảnh contener rỗng", "12. Ảnh đóng 1/3 công", 
-            "13. Ảnh đóng 1/2 công", "14. Ảnh đóng 1 cửa công", "15. Ảnh đóng toàn bộ cửa"
+            "13. Ảnh đóng 1/2 công", "14. Ảnh đóng 1 cửa công", "15. Ảnh đóng toàn bộ cửa",
+            "16. Ảnh biển số xe (车牌号照片)", "17. Ảnh danh mục xuất container (装箱单照片)", "18. Ảnh số chì container (封号照片)"
         ];
 
         const container = document.getElementById("photoContainer");
@@ -93,7 +121,7 @@
             container.innerHTML += `
                 <div class="col-md-4">
                     <div class="upload-box">
-                        <p class="small fw-bold mb-1">${title}</p>
+                        <p class="small fw-bold mb-1" style="font-size: 12px; height: 32px; overflow: hidden;">${title}</p>
                         <input type="file" name="photo_${index + 1}" accept="image/*" class="form-control form-control-sm">
                     </div>
                 </div>
