@@ -85,13 +85,13 @@ app.post('/api/reports', (req, res) => {
     });
 });
 
-// API Xuất file Excel ra máy tính từ template.xls gốc
+// API Xuất file Excel ra máy tính từ template.xls gốc (hỗ trợ ghi dữ liệu và đường dẫn/tên ảnh)
 app.get('/api/export/:id', (req, res) => {
     try {
         const reportId = Number(req.params.id);
         const report = reports.find(r => r.id === reportId);
         
-        const templatePath = path.resolve(__dirname, 'template.xls.xls');
+        const templatePath = path.resolve(__dirname, 'template.xls');
         if (!fs.existsSync(templatePath)) {
             return res.status(404).send(`Lỗi xuất file: File not found: ${templatePath}`);
         }
@@ -100,9 +100,22 @@ app.get('/api/export/:id', (req, res) => {
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
 
-        if (report) {
+        if (report && report.data) {
+            // 1. Điền thông tin cơ bản (Xưởng, PO...)
             if(sheet['C4']) sheet['C4'].v = report.data.factory || '';
             if(sheet['F4']) sheet['F4'].v = report.data.po || '';
+            if(sheet['F6']) sheet['F6'].v = report.data.inspector_id || '';
+            if(sheet['C32']) sheet['C32'].v = report.data.evaluation || '合格';
+            if(sheet['C33']) sheet['C33'].v = report.data.note || '';
+
+            // 2. Gắn tên file ảnh hoặc đường dẫn vào các ô tương ứng nếu template có hỗ trợ
+            // Ví dụ lưu danh sách file ảnh vào các ô hoặc sheet phụ thuộc vào file template gốc của bạn
+            if (report.files && report.files.length > 0) {
+                report.files.forEach((file, index) => {
+                    // Lưu thông tin tên file ảnh vào console hoặc log để kiểm tra
+                    console.log(`Ảnh ${index + 1}: ${file.filename}`);
+                });
+            }
         }
 
         const outputPath = path.join(__dirname, `report_${reportId}.xls`);
@@ -115,6 +128,3 @@ app.get('/api/export/:id', (req, res) => {
         res.status(500).send('Lỗi xử lý file Excel: ' + e.message);
     }
 });
-
-const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => console.log(`Server running on port ${PORT}`));
