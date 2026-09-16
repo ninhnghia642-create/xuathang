@@ -59,7 +59,7 @@ app.get('/api/users', (req, res) => {
 // API Lấy cấu trúc form từ file template.xls để hiển thị đúng mẫu trên điện thoại
 app.get('/api/template-structure', (req, res) => {
     try {
-        const templatePath = path.resolve(__dirname, 'template.xls');
+        const templatePath = path.resolve(__dirname, 'template.xls.xls');
         const workbook = XLSX.readFile(templatePath);
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
