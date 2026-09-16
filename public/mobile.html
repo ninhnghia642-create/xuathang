@@ -9,13 +9,14 @@
         body { background-color: #f8f9fa; font-size: 14px; }
         .form-container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         .section-title { background: #e9ecef; padding: 10px; font-weight: bold; margin-top: 20px; border-left: 4px solid #0d6efd; }
-        .upload-box { border: 2px dashed #0d6efd; padding: 12px; text-align: center; border-radius: 6px; background: #fdfdfd; cursor: pointer; }
+        .upload-box { border: 2px dashed #0d6efd; padding: 10px; text-align: center; border-radius: 6px; background: #fdfdfd; cursor: pointer; }
+        .preview-img { width: 100%; height: 90px; object-fit: cover; margin-top: 8px; border-radius: 4px; display: none; border: 1px solid #ddd; }
     </style>
 </head>
 <body>
     <div class="container my-4">
         <div class="form-container">
-            <h3 class="text-center text-primary mb-4">监装检验报告 - BÁO CÁO KIỂM TRA GIÁM SÁT KHO VÁN SÀN</h3>
+            <h3 class="text-center text-primary mb-4">监装检验报告 - BÁO CÁO KIỂM TRA GIÁM SÁT KHO</h3>
             
             <form id="qcForm" onsubmit="submitReport(event)">
                 <!-- Thông tin cơ bản -->
@@ -67,10 +68,10 @@
                     <textarea name="humidity_values" class="form-control" rows="3" placeholder="7.00, 14.00, 10.00, 13.00..."></textarea>
                 </div>
 
-                <!-- III. Ảnh minh chứng (Đủ 18 vị trí theo mẫu gốc) -->
+                <!-- III. Ảnh minh chứng (Đủ 18 vị trí kèm khung hiển thị ảnh cứng preview) -->
                 <div class="section-title">III. 现场照片 / Trọn Bộ Ảnh Minh Chứng (Đủ 18 Vị Trí)</div>
                 <div class="row g-3 mb-4" id="photoContainer">
-                    <!-- Sẽ tự động render 18 ô ảnh -->
+                    <!-- Sẽ tự động render 18 ô ảnh có kèm thẻ hiển thị ảnh trực quan -->
                 </div>
 
                 <!-- IV. Đánh giá và thông tin nhân viên -->
@@ -97,16 +98,14 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-success w-100 py-3 fw-bold fs-5">Gửi Báo Cáo Về Trang Chủ</button>
+                <button type="submit" id="submitBtn" class="btn btn-success w-100 py-3 fw-bold fs-5">Gửi Báo Cáo Về Trang Chủ</button>
             </form>
         </div>
     </div>
 
     <script>
-        // Đặt sẵn ngày hiện tại cho ô kiểm tra ngày
         document.getElementById('inspectDate').valueAsDate = new Date();
 
-        // Danh sách chuẩn đủ 18 vị trí ảnh minh chứng theo file gốc
         const photoTitles = [
             "1. Ảnh toàn đơn hàng", "2. Ảnh tem pallet", "3. Ảnh độ ẩm pallet", 
             "4. Ảnh độ ẩm ván đậy", "5. Ảnh đai nhựa & màng bọc", "6. Ảnh đóng công", 
@@ -118,29 +117,56 @@
 
         const container = document.getElementById("photoContainer");
         photoTitles.forEach((title, index) => {
+            const photoNum = index + 1;
             container.innerHTML += `
-                <div class="col-md-4">
+                <div class="col-md-4 col-6">
                     <div class="upload-box">
-                        <p class="small fw-bold mb-1" style="font-size: 12px; height: 32px; overflow: hidden;">${title}</p>
-                        <input type="file" name="photo_${index + 1}" accept="image/*" class="form-control form-control-sm">
+                        <p class="small fw-bold mb-1" style="font-size: 11px; height: 28px; overflow: hidden;">${title}</p>
+                        <input type="file" name="photo_${photoNum}" accept="image/*" class="form-control form-control-sm" onchange="previewImage(event, 'preview_${photoNum}')">
+                        <img id="preview_${photoNum}" class="preview-img" alt="Xem trước ảnh">
                     </div>
                 </div>
             `;
         });
 
+        // Hàm hiển thị hình ảnh thu nhỏ trực quan ngay khi chọn file
+        function previewImage(event, previewId) {
+            const reader = new FileReader();
+            const preview = document.getElementById(previewId);
+            reader.onload = function() {
+                preview.src = reader.result;
+                preview.style.display = "block";
+            }
+            if(event.target.files[0]) {
+                reader.readAsDataURL(event.target.files[0]);
+            }
+        }
+
         async function submitReport(e) {
             e.preventDefault();
-            const formData = new FormData(e.target);
-            const res = await fetch('/api/reports', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-            if(data.success) {
-                alert("Gửi báo cáo thành công!");
-                window.location.href = "/";
-            } else {
-                alert("Lỗi: " + data.message);
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = "Đang gửi báo cáo...";
+
+            try {
+                const formData = new FormData(e.target);
+                const res = await fetch('/api/reports', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if(data.success) {
+                    alert("Gửi báo cáo thành công!");
+                    window.location.href = "/";
+                } else {
+                    alert("Lỗi: " + data.message);
+                    btn.disabled = false;
+                    btn.innerText = "Gửi Báo Cáo Về Trang Chủ";
+                }
+            } catch (err) {
+                alert("Lỗi kết nối server: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "Gửi Báo Cáo Về Trang Chủ";
             }
         }
     </script>

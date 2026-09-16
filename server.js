@@ -6,8 +6,8 @@ const fs = require('fs');
 const multer = require('multer');
 const XLSX = require('xlsx');
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -18,7 +18,7 @@ if (!fs.existsSync(uploadDir)){
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname))
 });
 const upload = multer({ storage: storage });
 
@@ -50,14 +50,14 @@ app.delete('/api/reports/:id', (req, res) => {
     res.json({ success: true, message: 'Đã xóa báo cáo thành công!' });
 });
 
-// API Nhận báo cáo từ mobile
+// API Nhận báo cáo từ mobile (hỗ trợ nhận tối đa các file ảnh)
 app.post('/api/reports', upload.any(), (req, res) => {
     try {
         const newReport = {
             id: Date.now(),
             createdAt: new Date().toISOString(),
             data: req.body,
-            files: req.files ? req.files.map(f => f.filename) : []
+            files: req.files ? req.files.map(f => ({ fieldname: f.fieldname, filename: f.filename })) : []
         };
         reports.unshift(newReport);
         res.json({ success: true, message: 'Gửi báo cáo thành công!' });
