@@ -5,48 +5,51 @@
     <title>Báo Cáo Kiểm Tra Giám Sát Kho Vận Sàn</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #fff; color: #000; }
-        .sheet-container { max-width: 950px; margin: 0 auto; border: 1px solid #000; padding: 20px; }
-        h2 { text-align: center; margin-bottom: 20px; }
+        .sheet-container { max-width: 950px; margin: 0 auto; border: 2px solid #333; padding: 25px; border-radius: 6px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #003366; margin-bottom: 5px; }
+        .subtitle { text-align: center; font-weight: bold; margin-bottom: 20px; color: #555; }
         .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        .meta-table td { padding: 8px; border: 1px solid #000; font-size: 14px; }
+        .meta-table td { padding: 10px; border: 1px solid #000; font-size: 14px; background: #fdfdfd; }
         
         .photo-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .photo-table th, .photo-table td { border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle; }
-        .photo-table th { background-color: #f2f2f2; font-size: 13px; }
-        .photo-cell img { width: 140px; height: 100px; object-fit: cover; border: 1px solid #ccc; display: block; margin: 0 auto; }
-        .photo-label { font-size: 12px; font-weight: bold; margin-bottom: 4px; text-align: left; }
+        .photo-table th { background-color: #0056b3; color: white; font-size: 13px; }
+        .photo-cell img { width: 150px; height: 110px; object-fit: cover; border: 1px solid #ccc; display: block; margin: 0 auto; border-radius: 4px; }
+        .photo-label { font-size: 12px; font-weight: bold; margin-bottom: 6px; text-align: left; color: #333; }
         
-        .btn-print { display: block; width: 100%; padding: 12px; background: #28a745; color: white; border: none; font-size: 16px; border-radius: 4px; cursor: pointer; margin-top: 25px; text-align: center; text-decoration: none; }
+        .btn-print { display: block; width: 100%; padding: 14px; background: #28a745; color: white; border: none; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 30px; text-align: center; text-decoration: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         .btn-print:hover { background: #218838; }
+        
         @media print {
             .btn-print { display: none; }
-            body { margin: 0; }
-            .sheet-container { border: none; }
+            body { margin: 0; background: #fff; }
+            .sheet-container { border: none; box-shadow: none; padding: 0; max-width: 100%; }
         }
     </style>
 </head>
 <body>
     <div class="sheet-container">
-        <h2>监装检验报告<br><span style="font-size: 16px; font-weight: normal;">Báo cáo kiểm tra giám sát kho vận sàn</span></h2>
+        <h2>监装检验报告</h2>
+        <div class="subtitle">BÁO CÁO KIỂM TRA GIÁM SÁT KHO VẬN SÀN</div>
         
         <table class="meta-table">
             <tr>
                 <td><strong>Xưởng / Factory:</strong> <span id="val-factory">---</span></td>
                 <td><strong>Mã PO:</strong> <span id="val-po">---</span></td>
-                <td><strong>Mã NV (Inspector):</strong> <span id="val-inspector">---</span></td>
+                <td><strong>Mã NV kiểm tra:</strong> <span id="val-inspector">---</span></td>
             </tr>
             <tr>
-                <td colspan="2"><strong>Ngoại quan / Evaluation:</strong> <span id="val-eval">---</span></td>
-                <td><strong>Ngày kiểm tra:</strong> <span id="val-date">---</span></td>
+                <td colspan="2"><strong>Kết luận ngoại quan (Evaluation):</strong> <span id="val-eval" style="font-weight: bold; color: #007bff;">---</span></td>
+                <td><strong>Ngày giờ gửi:</strong> <span id="val-date">---</span></td>
             </tr>
             <tr>
-                <td colspan="3"><strong>Ghi chú / Note:</strong> <span id="val-note">---</span></td>
+                <td colspan="3"><strong>Ghi chú (Note):</strong> <span id="val-note">---</span></td>
             </tr>
         </table>
 
-        <h3>Danh sách 18 mục ảnh thực tế giám sát</h3>
+        <h3 style="margin-top: 25px; border-bottom: 2px solid #0056b3; padding-bottom: 5px;">Danh sách 18 vị trí ảnh chụp thực tế giám sát</h3>
         <table class="photo-table" id="photo-table-grid">
-            <!-- Được render động qua JavaScript mô phỏng 6 hàng x 3 cột -->
+            <!-- Render tự động -->
         </table>
 
         <button class="btn-print" onclick="window.print()">🖨️ In Báo Cáo / Lưu thành PDF</button>
@@ -54,24 +57,24 @@
 
     <script>
         const titles = [
-            "1. 整柜照片 Ảnh toàn bộ container",
-            "2. 托盘标照片 Ảnh tem pallet",
-            "3. 托盘含水率照片 Ảnh độ ẩm pallet",
-            "4. 盖板(含水率) Ảnh độ ẩm ván đậy",
-            "5. 塑钢带/缠绕膜 Ảnh dây nhựa/màng chít",
-            "6. 装车照片 Ảnh quá trình đóng xe",
-            "7. 是否淋雨(外观潮湿) Ảnh kiểm tra ẩm ướt/mưa",
-            "8. 熏蒸章照片 Ảnh dấu hun trùng",
-            "9. 批次照片-1/số lô pallet",
-            "10. 集装箱内部侧面照片 Ảnh bên trong container",
-            "11. 空箱照片 Ảnh container rỗng",
-            "12. 装满三分之一照片 Ảnh đóng 1/3",
-            "13. 装满二分之一照片 Ảnh đóng 1/2",
-            "14. 装满关一个门照片 Ảnh đóng 1 cửa",
-            "15. 装满关门照片 Ảnh đóng kín cửa",
-            "16. 车牌号照片 Ảnh biển số xe",
-            "17. 装单照片 Ảnh danh mục xuất hàng",
-            "18. 封号照片 Ảnh số chì niêm phong"
+            "1. 整柜照片 - Ảnh toàn bộ container",
+            "2. 托盘标照片 - Ảnh tem pallet",
+            "3. 托盘含水率照片 - Ảnh độ ẩm pallet",
+            "4. 盖板(含水率) - Ảnh độ ẩm ván đậy",
+            "5. 塑钢带/缠绕膜 - Ảnh dây nhựa/màng chít",
+            "6. 装车照片 - Ảnh quá trình đóng xe",
+            "7. 是否淋雨(外观潮湿) - Ảnh kiểm tra ẩm ướt/mưa",
+            "8. 熏蒸章照片 - Ảnh dấu hun trùng",
+            "9. 批次照片-1 - Ảnh số lô pallet",
+            "10. 集装箱内部侧面照片 - Ảnh bên trong container",
+            "11. 空箱照片 - Ảnh container rỗng",
+            "12. 装满三分之一照片 - Ảnh đóng 1/3",
+            "13. 装满二分之一照片 - Ảnh đóng 1/2",
+            "14. 装满关一个门照片 - Ảnh đóng 1 cửa",
+            "15. 装满关门照片 - Ảnh đóng kín cửa",
+            "16. 车牌号照片 - Ảnh biển số xe",
+            "17. 装单照片 - Ảnh danh mục xuất hàng",
+            "18. 封号照片 - Ảnh số chì niêm phong"
         ];
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -87,18 +90,16 @@
                         document.getElementById('val-inspector').innerText = report.data.inspector_id || '';
                         document.getElementById('val-eval').innerText = report.data.evaluation || '';
                         document.getElementById('val-note').innerText = report.data.note || '';
-                        document.getElementById('val-date').innerText = new Date(report.createdAt).toLocaleDateString();
+                        document.getElementById('val-date').innerText = new Date(report.createdAt).toLocaleString();
                     }
 
                     const tableGrid = document.getElementById('photo-table-grid');
                     tableGrid.innerHTML = '';
 
-                    // Chia 18 ảnh thành 6 hàng, mỗi hàng 3 cột
                     for (let row = 0; row < 6; row++) {
                         const tr = document.createElement('tr');
-                        
                         for (let col = 0; col < 3; col++) {
-                            const index = row * 3 + col; // Từ 0 đến 17
+                            const index = row * 3 + col;
                             const file = report.files && report.files[index];
                             
                             const td = document.createElement('td');
@@ -106,9 +107,9 @@
                             
                             let htmlContent = `<div class="photo-label">${titles[index] || `Ảnh ${index + 1}`}</div>`;
                             if (file) {
-                                htmlContent += `<img src="/uploads/${file.filename}" alt="Ảnh ${index + 1}">`;
+                                htmlContent += `<img src="/uploads/${file.filename}" alt="Ảnh QC ${index + 1}">`;
                             } else {
-                                htmlContent += `<div style="height: 100px; line-height: 100px; color: #888; font-style: italic;">Chưa có ảnh</div>`;
+                                htmlContent += `<div style="height: 110px; line-height: 110px; color: #888; font-style: italic; background: #fafafa;">Chưa có ảnh</div>`;
                             }
                             td.innerHTML = htmlContent;
                             tr.appendChild(td);
