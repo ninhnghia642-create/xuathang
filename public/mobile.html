@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biểu Mẫu Kiểm Tra Giám Sát Kho Vận Sàn - QC Report</title>
-    <!-- Thư viện SheetJS tạo file Excel trên trình duyệt -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 10px; color: #333; }
@@ -81,58 +80,58 @@
                     <th>Hạng mục kiểm tra</th><th>Tiêu chuẩn</th><th>Lỗi</th>
                 </tr>
                 <tr>
-                    <td class="text-left">Đối chiếu mã hợp đồng</td>
+                    <td class="text-left">1. Đối chiếu mã hợp đồng</td>
                     <td><input type="text" name="chk_1_std" value="是"></td>
                     <td><input type="text" name="chk_1_err" value="无"></td>
-                    <td class="text-left">Đai nhựa tốt không?</td>
+                    <td class="text-left">2. Đai nhựa tốt không?</td>
                     <td><input type="text" name="chk_2_std" value="是"></td>
                     <td><input type="text" name="chk_2_err" value="无"></td>
                 </tr>
                 <tr>
-                    <td class="text-left">Pallet mốc / hư hỏng</td>
+                    <td class="text-left">3. Pallet mốc / hư hỏng</td>
                     <td><input type="text" name="chk_3_std" value="否"></td>
                     <td><input type="text" name="chk_3_err" value="无"></td>
-                    <td class="text-left">Thùng carton hở keo</td>
+                    <td class="text-left">4. Thùng carton hở keo</td>
                     <td><input type="text" name="chk_4_std" value="否"></td>
                     <td><input type="text" name="chk_4_err" value="无"></td>
                 </tr>
                 <tr>
-                    <td class="text-left">Đinh lộ ra ngoài pallet</td>
+                    <td class="text-left">5. Đinh lộ ra ngoài pallet</td>
                     <td><input type="text" name="chk_5_std" value="否"></td>
                     <td><input type="text" name="chk_5_err" value="无"></td>
-                    <td class="text-left">Thùng carton rách/mốc</td>
+                    <td class="text-left">6. Thùng carton rách/mốc</td>
                     <td><input type="text" name="chk_6_std" value="否"></td>
                     <td><input type="text" name="chk_6_err" value="无"></td>
                 </tr>
                 <tr>
-                    <td class="text-left">Trụ gỗ dưới pallet tốt</td>
+                    <td class="text-left">7. Trụ gỗ dưới pallet tốt</td>
                     <td><input type="text" name="chk_7_std" value="是"></td>
                     <td><input type="text" name="chk_7_err" value="无"></td>
-                    <td class="text-left">Pallet có bị lệch không</td>
+                    <td class="text-left">8. Pallet có bị lệch không</td>
                     <td><input type="text" name="chk_8_std" value="否"></td>
                     <td><input type="text" name="chk_8_err" value="无"></td>
                 </tr>
                 <tr>
-                    <td class="text-left">Tem chống giả</td>
+                    <td class="text-left">9. Tem chống giả</td>
                     <td><input type="text" name="chk_9_std" value="否"></td>
                     <td><input type="text" name="chk_9_err" value="无"></td>
-                    <td class="text-left">Độ ẩm ván đậy</td>
+                    <td class="text-left">10. Độ ẩm ván đậy</td>
                     <td><input type="text" name="chk_10_std" value="否"></td>
                     <td><input type="text" name="chk_10_err" value="无"></td>
                 </tr>
                 <tr>
-                    <td class="text-left">Ván đậy bị mốc</td>
+                    <td class="text-left">11. Ván đậy bị mốc</td>
                     <td><input type="text" name="chk_11_std" value="否"></td>
                     <td><input type="text" name="chk_11_err" value="无"></td>
-                    <td class="text-left">Đóng công dính mưa</td>
+                    <td class="text-left">12. Đóng công dính mưa</td>
                     <td><input type="text" name="chk_12_std" value="否"></td>
                     <td><input type="text" name="chk_12_err" value="无"></td>
                 </tr>
                 <tr>
-                    <td class="text-left">Bề ngoài ẩm ướt</td>
+                    <td class="text-left">13. Bề ngoài ẩm ướt</td>
                     <td><input type="text" name="chk_13_std" value="否"></td>
                     <td><input type="text" name="chk_13_err" value="无"></td>
-                    <td class="text-left">Màng chít có vết mưa</td>
+                    <td class="text-left">14. Màng chít có vết mưa</td>
                     <td><input type="text" name="chk_14_std" value="否"></td>
                     <td><input type="text" name="chk_14_err" value="无"></td>
                 </tr>
@@ -178,7 +177,7 @@
                 </div>
             </div>
 
-            <div class="section-title">18 现场照片记录 - 18 Vị Trí Ảnh Chụp Minh Họa Giám Sát (Chọn từ thư viện hoặc chụp mới)</div>
+            <div class="section-title">18 现场照片记录 - 18 Vị Trí Ảnh Chụp Minh Họa Giám Sát</div>
             <div class="photo-grid" id="photoGridContainer"></div>
 
             <button type="button" class="btn-submit" onclick="saveAndUploadReport()">💾 Lưu File Excel & Gửi Về Đám Mây</button>
@@ -209,7 +208,6 @@
             gridContainer.appendChild(div);
         });
 
-        // Hàm nén ảnh tự động
         function compressAndPreview(event, id) {
             const file = event.target.files[0];
             if (!file) return;
@@ -248,30 +246,54 @@
             }
         }
 
-        // Hàm xử lý lưu file Excel về máy điện thoại + Gửi ngầm dữ liệu lên đám mây máy chủ
         function saveAndUploadReport() {
             const form = document.getElementById('qcForm');
             const formData = new FormData(form);
             let reportData = {};
             formData.forEach((value, key) => { reportData[key] = value; });
 
-            // 1. Tạo file Excel lưu trực tiếp về điện thoại đề phòng mất mạng
+            // 1. Tạo file Excel chuẩn trình tự nội dung biểu mẫu
             const wb = XLSX.utils.book_new();
             const wsData = [
-                ["BÁO CÁO KIỂM TRA GIÁM SÁT KHO VẬN SÀN"],
-                ["Xưởng (Factory):", reportData.factory, "Mã PO:", reportData.po],
-                ["Tổng số pallet:", reportData.total_pallet, "Mã NV:", reportData.inspector_id],
+                ["监装检验报告 - BÁO CÁO KIỂM TRA GIÁM SÁT KHO VẬN SÀN"],
+                ["Xưởng (Factory):", reportData.factory || "", "Mã PO:", reportData.po || ""],
+                ["Tổng số pallet:", reportData.total_pallet || "", "Mã Nhân Viên:", reportData.inspector_id || ""],
                 [],
+                ["--- NỘI DUNG KIỂM TRA NGOẠI QUAN ---", "", ""],
                 ["Hạng mục kiểm tra", "Tiêu chuẩn", "Lỗi"]
             ];
-            for(let i=1; i<=14; i++) {
-                wsData.push([titles[i-1] || `Mục ${i}`, reportData[`chk_${i}_std`], reportData[`chk_${i}_err`]]);
-            }
-            const ws = XLSX.utils.aoa_to_sheet(wsData);
-            XLSX.utils.book_append_sheet(wb, ws, "QC Report");
-            XLSX.writeFile(wb, `QC_Report_${reportData.po || 'Data'}.xlsx`);
 
-            // 2. Gửi dữ liệu và ảnh lên đám mây máy chủ
+            for(let i=1; i<=14; i++) {
+                wsData.push([titles[i-1] || `Mục ${i}`, reportData[`chk_${i}_std`] || "", reportData[`chk_${i}_err`] || ""]);
+            }
+
+            wsData.push([]);
+            wsData.push(["--- KIỂM TRA ĐỘ ẨM ---", "", "", "", "", ""]);
+            wsData.push(["Hạng mục", "Điểm 1", "Điểm 2", "Điểm 3", "Điểm 4", "Điểm 5", "Lỗi"]);
+            wsData.push([
+                "Độ ẩm ván đậy", 
+                reportData.moisture_cover_1 || "", reportData.moisture_cover_2 || "", reportData.moisture_cover_3 || "", 
+                reportData.moisture_cover_4 || "", reportData.moisture_cover_5 || "", reportData.moisture_cover_err || ""
+            ]);
+            wsData.push([
+                "Độ ẩm pallet", 
+                reportData.moisture_pallet_1 || "", reportData.moisture_pallet_2 || "", reportData.moisture_pallet_3 || "", 
+                reportData.moisture_pallet_4 || "", reportData.moisture_pallet_5 || "", reportData.moisture_pallet_err || ""
+            ]);
+
+            wsData.push([]);
+            wsData.push(["--- KẾT LUẬN & GHI CHÚ ---"]);
+            wsData.push(["Đánh giá ngoại quan:", reportData.evaluation || ""]);
+            wsData.push(["Ghi chú:", reportData.note || ""]);
+
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            XLSX.utils.book_append_sheet(wb, ws, "QC Report Summary");
+            
+            // Đặt tên file excel theo Mã PO và Xưởng
+            const fileName = `QC_Report_${reportData.po || 'Data'}_${reportData.factory || 'Xuong'}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+
+            // 2. Gửi dữ liệu và hình ảnh lên đám mây máy chủ
             document.getElementById('loadingOverlay').style.display = 'flex';
             for (let id in compressedFiles) {
                 formData.set(`photo_${id}`, compressedFiles[id]);
@@ -285,7 +307,7 @@
             .then(data => {
                 document.getElementById('loadingOverlay').style.display = 'none';
                 if (data.success) {
-                    alert('Đã lưu file Excel về máy và đồng bộ lên đám mây thành công!');
+                    alert('Đã lưu file Excel về máy và đồng bộ thành công lên đám mây!');
                     window.location.reload();
                 } else {
                     alert('Lỗi lưu đám mây: ' + data.message);
@@ -293,7 +315,7 @@
             })
             .catch(err => {
                 document.getElementById('loadingOverlay').style.display = 'none';
-                alert('Mất kết nối mạng! Tuy nhiên file Excel đã được lưu trực tiếp vào máy điện thoại của bạn.');
+                alert('Mất kết nối mạng! Tuy nhiên file Excel chi tiết đã được lưu trực tiếp vào máy của bạn.');
             });
         }
     </script>
