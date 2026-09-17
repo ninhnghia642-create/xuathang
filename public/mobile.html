@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biểu Mẫu Kiểm Tra Giám Sát Kho Vận Sàn - QC Report</title>
+    <!-- Thư viện SheetJS tạo file Excel trên trình duyệt -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 10px; color: #333; }
         .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -17,14 +19,12 @@
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; }
         input[type="text"], select, textarea { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
         
-        /* Bảng phong cách Excel */
         .excel-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; font-size: 12px; }
         .excel-table th, .excel-table td { border: 1px solid #bbb; padding: 6px; text-align: center; vertical-align: middle; }
         .excel-table th { background-color: #f2f2f2; color: #000; font-weight: bold; }
         .excel-table td.text-left { text-align: left; }
         .excel-table input, .excel-table select { width: 100%; padding: 4px; border: 1px solid #ddd; border-radius: 3px; text-align: center; font-size: 12px; }
 
-        /* Lưới 18 ảnh */
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; margin-top: 10px; }
         .photo-box { background: #fafafa; border: 1px solid #ddd; padding: 10px; border-radius: 6px; }
         .photo-box label { font-size: 12px; color: #333; margin-bottom: 6px; font-weight: bold; }
@@ -36,17 +36,15 @@
         .row-flex { display: flex; gap: 15px; }
         .row-flex .form-group { flex: 1; }
 
-        /* Hiệu ứng loading khi gửi 4G */
         #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 18px; font-weight: bold; flex-direction: column; }
         .spinner { border: 5px solid #f3f3f3; border-top: 5px solid #28a745; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <!-- Màn hình chờ khi đang nén và gửi báo cáo qua 4G -->
     <div id="loadingOverlay">
         <div class="spinner"></div>
-        <div>Đang tối ưu ảnh và gửi báo cáo qua mạng... Vui lòng đợi!</div>
+        <div>Đang tối ưu ảnh, xuất Excel và đồng bộ về máy chủ... Vui lòng đợi!</div>
     </div>
 
     <div class="container">
@@ -54,7 +52,6 @@
         <div class="subtitle">BÁO CÁO KIỂM TRA GIÁM SÁT KHO VẬN SÀN (QC INSPECTION REPORT)</div>
 
         <form id="qcForm">
-            <!-- Thông tin chung -->
             <div class="row-flex">
                 <div class="form-group">
                     <label>厂区 / Xưởng (Factory):</label>
@@ -77,89 +74,77 @@
                 </div>
             </div>
 
-            <!-- Bảng Nội dung kiểm tra ngoại quan -->
             <div class="section-title">外观检验 - Nội Dung Kiểm Tra Ngoại Quan</div>
             <table class="excel-table">
                 <tr>
-                    <th>Hạng mục kiểm tra<br>(检验项目)</th>
-                    <th>Tiêu chuẩn<br>(标准要求)</th>
-                    <th>Lỗi<br>(不合格品数)</th>
-                    <th>Hạng mục kiểm tra<br>(检验项目)</th>
-                    <th>Tiêu chuẩn<br>(标准要求)</th>
-                    <th>Lỗi<br>(不合格品数)</th>
+                    <th>Hạng mục kiểm tra</th><th>Tiêu chuẩn</th><th>Lỗi</th>
+                    <th>Hạng mục kiểm tra</th><th>Tiêu chuẩn</th><th>Lỗi</th>
                 </tr>
                 <tr>
-                    <td class="text-left">Đối chiếu mã hợp đồng<br>(合同号核对)</td>
+                    <td class="text-left">Đối chiếu mã hợp đồng</td>
                     <td><input type="text" name="chk_1_std" value="是"></td>
                     <td><input type="text" name="chk_1_err" value="无"></td>
-                    <td class="text-left">Đai nhựa tốt không?<br>(塑钢带是否完好)</td>
+                    <td class="text-left">Đai nhựa tốt không?</td>
                     <td><input type="text" name="chk_2_std" value="是"></td>
                     <td><input type="text" name="chk_2_err" value="无"></td>
                 </tr>
                 <tr>
-                    <td class="text-left">Pallet mốc / hư hỏng<br>(托盘是否发霉破损)</td>
+                    <td class="text-left">Pallet mốc / hư hỏng</td>
                     <td><input type="text" name="chk_3_std" value="否"></td>
                     <td><input type="text" name="chk_3_err" value="无"></td>
-                    <td class="text-left">Thùng carton hở keo<br>(纸箱开胶)</td>
+                    <td class="text-left">Thùng carton hở keo</td>
                     <td><input type="text" name="chk_4_std" value="否"></td>
                     <td><input type="text" name="chk_4_err" value="无"></td>
                 </tr>
                 <tr>
-                    <td class="text-left">Đinh lộ ra ngoài pallet<br>(托盘是否钉子外漏)</td>
+                    <td class="text-left">Đinh lộ ra ngoài pallet</td>
                     <td><input type="text" name="chk_5_std" value="否"></td>
                     <td><input type="text" name="chk_5_err" value="无"></td>
-                    <td class="text-left">Thùng carton rách/mốc<br>(纸箱破损 发霉)</td>
+                    <td class="text-left">Thùng carton rách/mốc</td>
                     <td><input type="text" name="chk_6_std" value="否"></td>
                     <td><input type="text" name="chk_6_err" value="无"></td>
                 </tr>
                 <tr>
-                    <td class="text-left">Trụ gỗ dưới pallet tốt<br>(托盘底部档位木墩完好)</td>
+                    <td class="text-left">Trụ gỗ dưới pallet tốt</td>
                     <td><input type="text" name="chk_7_std" value="是"></td>
                     <td><input type="text" name="chk_7_err" value="无"></td>
-                    <td class="text-left">Pallet có bị lệch không<br>(整托是否移位)</td>
+                    <td class="text-left">Pallet có bị lệch không</td>
                     <td><input type="text" name="chk_8_std" value="否"></td>
                     <td><input type="text" name="chk_8_err" value="无"></td>
                 </tr>
                 <tr>
-                    <td class="text-left">Tem chống giả<br>(防伪标是否漏贴)</td>
+                    <td class="text-left">Tem chống giả</td>
                     <td><input type="text" name="chk_9_std" value="否"></td>
                     <td><input type="text" name="chk_9_err" value="无"></td>
-                    <td class="text-left">Độ ẩm ván đậy<br>(盖板湿度)</td>
+                    <td class="text-left">Độ ẩm ván đậy</td>
                     <td><input type="text" name="chk_10_std" value="否"></td>
                     <td><input type="text" name="chk_10_err" value="无"></td>
                 </tr>
                 <tr>
-                    <td class="text-left">Ván đậy bị mốc<br>(盖板是否发霉)</td>
+                    <td class="text-left">Ván đậy bị mốc</td>
                     <td><input type="text" name="chk_11_std" value="否"></td>
                     <td><input type="text" name="chk_11_err" value="无"></td>
-                    <td class="text-left">Đóng công dính mưa<br>(装柜是否淋雨)</td>
+                    <td class="text-left">Đóng công dính mưa</td>
                     <td><input type="text" name="chk_12_std" value="否"></td>
                     <td><input type="text" name="chk_12_err" value="无"></td>
                 </tr>
                 <tr>
-                    <td class="text-left">Bề ngoài ẩm ướt<br>(外观潮湿)</td>
+                    <td class="text-left">Bề ngoài ẩm ướt</td>
                     <td><input type="text" name="chk_13_std" value="否"></td>
                     <td><input type="text" name="chk_13_err" value="无"></td>
-                    <td class="text-left">Màng chít có vết mưa<br>(缠绕膜是否有雨渍)</td>
+                    <td class="text-left">Màng chít có vết mưa</td>
                     <td><input type="text" name="chk_14_std" value="否"></td>
                     <td><input type="text" name="chk_14_err" value="无"></td>
                 </tr>
             </table>
 
-            <!-- Bảng kiểm tra độ ẩm -->
-            <div class="section-title">盖板含水率 & 托盘含水率 - Kiểm Tra Độ Ẩm (Ván đậy & Pallet)</div>
+            <div class="section-title">盖板含水率 & 托盘含水率 - Kiểm Tra Độ Ẩm</div>
             <table class="excel-table">
                 <tr>
-                    <th>Hạng mục<br>Mục kiểm tra</th>
-                    <th>Điểm 1</th>
-                    <th>Điểm 2</th>
-                    <th>Điểm 3</th>
-                    <th>Điểm 4</th>
-                    <th>Điểm 5</th>
-                    <th>Lỗi / Ghi chú</th>
+                    <th>Hạng mục</th><th>Điểm 1</th><th>Điểm 2</th><th>Điểm 3</th><th>Điểm 4</th><th>Điểm 5</th><th>Lỗi / Ghi chú</th>
                 </tr>
                 <tr>
-                    <td class="text-left"><b>Độ ẩm ván đậy</b><br>盖板含水率(≤20)</td>
+                    <td class="text-left"><b>Độ ẩm ván đậy</b></td>
                     <td><input type="text" name="moisture_cover_1" placeholder="7"></td>
                     <td><input type="text" name="moisture_cover_2" placeholder="14"></td>
                     <td><input type="text" name="moisture_cover_3" placeholder="14"></td>
@@ -168,7 +153,7 @@
                     <td><input type="text" name="moisture_cover_err" value="无"></td>
                 </tr>
                 <tr>
-                    <td class="text-left"><b>Độ ẩm pallet</b><br>托盘含水率(≤20)</td>
+                    <td class="text-left"><b>Độ ẩm pallet</b></td>
                     <td><input type="text" name="moisture_pallet_1" placeholder="10"></td>
                     <td><input type="text" name="moisture_pallet_2" placeholder="15"></td>
                     <td><input type="text" name="moisture_pallet_3" placeholder="13"></td>
@@ -178,29 +163,25 @@
                 </tr>
             </table>
 
-            <!-- Đánh giá và Ghi chú -->
             <div class="section-title">外观判定 & 备注 - Kết Luận & Ghi Chú</div>
             <div class="row-flex">
                 <div class="form-group">
-                    <label>外观判定 / Đánh giá ngoại quan (Evaluation):</label>
+                    <label>Đánh giá ngoại quan (Evaluation):</label>
                     <select name="evaluation">
                         <option value="合格" selected>合格 (Đạt / Pass)</option>
                         <option value="不合格">不合格 (Không đạt / Fail)</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>备注 / Ghi chú (Note):</label>
+                    <label>Ghi chú (Note):</label>
                     <input type="text" name="note" placeholder="Nhập ghi chú nếu có...">
                 </div>
             </div>
 
-            <!-- 18 vị trí ảnh chụp (Cho phép chọn từ thư viện hoặc chụp mới, không ép capture) -->
-            <div class="section-title">18 现场照片记录 - 18 Vị Trí Ảnh Chụp Minh Họa Giám Sát</div>
-            <div class="photo-grid" id="photoGridContainer">
-                <!-- Javascript sinh đủ 18 ô ảnh -->
-            </div>
+            <div class="section-title">18 现场照片记录 - 18 Vị Trí Ảnh Chụp Minh Họa Giám Sát (Chọn từ thư viện hoặc chụp mới)</div>
+            <div class="photo-grid" id="photoGridContainer"></div>
 
-            <button type="submit" class="btn-submit">🚀 Gửi Báo Cáo Kiểm Tra Ngay</button>
+            <button type="button" class="btn-submit" onclick="saveAndUploadReport()">💾 Lưu File Excel & Gửi Về Đám Mây</button>
         </form>
     </div>
 
@@ -214,9 +195,9 @@
             "16. 车牌号照片 (Ảnh biển số xe)", "17. 装箱单照片 (Ảnh danh mục xuất hàng)", "18. 封号照片 (Ảnh số chì niêm phong)"
         ];
 
-        const compressedFiles = {}; // Lưu trữ file đã được nén cho từng ô
-
+        const compressedFiles = {};
         const gridContainer = document.getElementById('photoGridContainer');
+
         titles.forEach((title, index) => {
             const div = document.createElement('div');
             div.className = 'photo-box';
@@ -228,7 +209,7 @@
             gridContainer.appendChild(div);
         });
 
-        // Hàm nén ảnh tự động trên trình duyệt điện thoại (giảm dung lượng, chống nghẽn mạng 4G)
+        // Hàm nén ảnh tự động
         function compressAndPreview(event, id) {
             const file = event.target.files[0];
             if (!file) return;
@@ -240,21 +221,15 @@
                 img.src = e.target.result;
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 1024; // Giới hạn chiều rộng tối đa
-                    const MAX_HEIGHT = 1024; // Giới hạn chiều cao tối đa
+                    const MAX_WIDTH = 1024;
+                    const MAX_HEIGHT = 1024;
                     let width = img.width;
                     let height = img.height;
 
                     if (width > height) {
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
+                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
                     } else {
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
-                        }
+                        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
                     }
 
                     canvas.width = width;
@@ -262,15 +237,10 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // Chuyển ảnh sang định dạng JPEG với chất lượng 0.75 (nén nhẹ nhưng cực nét)
                     canvas.toBlob(function(blob) {
-                        const compressedFile = new File([blob], file.name, {
-                            type: 'image/jpeg',
-                            lastModified: Date.now()
-                        });
+                        const compressedFile = new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() });
                         compressedFiles[id] = compressedFile;
 
-                        // Hiển thị ảnh thu nhỏ (thumbnail)
                         const output = document.getElementById(`preview_${id}`);
                         output.innerHTML = `<img src="${canvas.toDataURL('image/jpeg', 0.75)}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;">`;
                     }, 'image/jpeg', 0.75);
@@ -278,13 +248,31 @@
             }
         }
 
-        document.getElementById('qcForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        // Hàm xử lý lưu file Excel về máy điện thoại + Gửi ngầm dữ liệu lên đám mây máy chủ
+        function saveAndUploadReport() {
+            const form = document.getElementById('qcForm');
+            const formData = new FormData(form);
+            let reportData = {};
+            formData.forEach((value, key) => { reportData[key] = value; });
+
+            // 1. Tạo file Excel lưu trực tiếp về điện thoại đề phòng mất mạng
+            const wb = XLSX.utils.book_new();
+            const wsData = [
+                ["BÁO CÁO KIỂM TRA GIÁM SÁT KHO VẬN SÀN"],
+                ["Xưởng (Factory):", reportData.factory, "Mã PO:", reportData.po],
+                ["Tổng số pallet:", reportData.total_pallet, "Mã NV:", reportData.inspector_id],
+                [],
+                ["Hạng mục kiểm tra", "Tiêu chuẩn", "Lỗi"]
+            ];
+            for(let i=1; i<=14; i++) {
+                wsData.push([titles[i-1] || `Mục ${i}`, reportData[`chk_${i}_std`], reportData[`chk_${i}_err`]]);
+            }
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            XLSX.utils.book_append_sheet(wb, ws, "QC Report");
+            XLSX.writeFile(wb, `QC_Report_${reportData.po || 'Data'}.xlsx`);
+
+            // 2. Gửi dữ liệu và ảnh lên đám mây máy chủ
             document.getElementById('loadingOverlay').style.display = 'flex';
-
-            const formData = new FormData(this);
-
-            // Đưa các file đã nén vào formData để gửi lên server
             for (let id in compressedFiles) {
                 formData.set(`photo_${id}`, compressedFiles[id]);
             }
@@ -297,17 +285,17 @@
             .then(data => {
                 document.getElementById('loadingOverlay').style.display = 'none';
                 if (data.success) {
-                    alert('Gửi báo cáo thành công!');
+                    alert('Đã lưu file Excel về máy và đồng bộ lên đám mây thành công!');
                     window.location.reload();
                 } else {
-                    alert('Lỗi: ' + data.message);
+                    alert('Lỗi lưu đám mây: ' + data.message);
                 }
             })
             .catch(err => {
                 document.getElementById('loadingOverlay').style.display = 'none';
-                alert('Có lỗi kết nối mạng 4G! Vui lòng kiểm tra lại sóng hoặc thử lại.');
+                alert('Mất kết nối mạng! Tuy nhiên file Excel đã được lưu trực tiếp vào máy điện thoại của bạn.');
             });
-        });
+        }
     </script>
 </body>
 </html>
