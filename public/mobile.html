@@ -6,17 +6,18 @@
     <title>Biểu Mẫu Kiểm Tra Giám Sát Kho Vận Sàn - QC Report</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
+        * { box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 10px; color: #333; }
-        .container { width: 790px; margin: 0 auto; background: #fff; padding: 20px; box-sizing: border-box; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; }
         
-        h2 { text-align: center; color: #004080; margin-bottom: 5px; font-size: 20px; }
+        h2 { text-align: center; color: #004080; margin-top: 0; margin-bottom: 5px; font-size: 20px; }
         .subtitle { text-align: center; font-weight: bold; margin-bottom: 20px; color: #555; font-size: 13px; }
 
-        .section-title { font-weight: bold; background: #e9ecef; padding: 8px 12px; margin-top: 20px; margin-bottom: 10px; border-left: 4px solid #004080; font-size: 14px; page-break-inside: avoid; break-inside: avoid; }
+        .section-title { font-weight: bold; background: #e9ecef; padding: 8px 12px; margin-top: 15px; margin-bottom: 10px; border-left: 4px solid #004080; font-size: 14px; page-break-inside: avoid; break-inside: avoid; }
 
         .form-group { margin-bottom: 12px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; }
-        input[type="text"], select, textarea { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        input[type="text"], select, textarea { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
         
         .excel-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; font-size: 12px; page-break-inside: avoid; break-inside: avoid; }
         .excel-table th, .excel-table td { border: 1px solid #bbb; padding: 6px; text-align: center; vertical-align: middle; }
@@ -24,9 +25,10 @@
         .excel-table td.text-left { text-align: left; }
         .excel-table input, .excel-table select { width: 100%; padding: 4px; border: 1px solid #ddd; border-radius: 3px; text-align: center; font-size: 12px; }
 
-        .photo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 10px; }
-        .photo-box { background: #fafafa; border: 1px solid #ddd; padding: 10px; border-radius: 6px; page-break-inside: avoid; break-inside: avoid; }
-        .photo-box label { font-size: 12px; color: #333; margin-bottom: 6px; font-weight: bold; }
+        /* Sử dụng inline-block chuẩn hóa tương thích Canvas tuyệt đối */
+        .photo-grid { width: 100%; font-size: 0; margin-top: 10px; }
+        .photo-box { display: inline-block; width: 48%; margin: 1%; vertical-align: top; font-size: 13px; background: #fafafa; border: 1px solid #ddd; padding: 10px; border-radius: 6px; page-break-inside: avoid; break-inside: avoid; }
+        .photo-box label { display: block; font-size: 12px; color: #333; margin-bottom: 6px; font-weight: bold; }
         .photo-box input[type="file"] { font-size: 11px; width: 100%; }
 
         .btn-submit { display: block; width: 100%; padding: 14px; background: #004080; color: white; border: none; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 25px; text-align: center; }
@@ -43,7 +45,7 @@
 <body>
     <div id="loadingOverlay">
         <div class="spinner"></div>
-        <div id="loadingText">Đang xử lý xuất PDF trọn vẹn và đồng bộ dữ liệu... Vui lòng đợi!</div>
+        <div id="loadingText">Đang xử lý xuất PDF và đồng bộ dữ liệu... Vui lòng đợi!</div>
     </div>
 
     <div class="container" id="pdfContent">
@@ -256,18 +258,23 @@
             }
 
             document.getElementById('loadingOverlay').style.display = 'flex';
-            document.getElementById('loadingText').innerText = 'Đang biên dịch file PDF từ trang đầu tiên...';
+            document.getElementById('loadingText').innerText = 'Đang biên dịch tệp PDF từ trang đầu tiên...';
+
+            // Cuộn màn hình lên đầu trước khi chụp canvas để tránh lỗi offset scrollY
+            window.scrollTo(0, 0);
 
             const element = document.getElementById('pdfContent');
             const opt = {
-                margin:       [5, 5, 5, 5],
+                margin:       [8, 8, 8, 8],
                 filename:     `QC_Report_${po}_${factory}.pdf`,
                 image:        { type: 'jpeg', quality: 0.85 },
+                pagebreak:    { mode: ['css', 'legacy'] },
                 html2canvas:  { 
                     scale: 2, 
                     useCORS: true, 
                     logging: false,
-                    letterRendering: true
+                    scrollY: 0,
+                    scrollX: 0
                 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
@@ -279,7 +286,7 @@
                 // Tải file PDF về máy
                 pdfWorker.save();
 
-                document.getElementById('loadingText').innerText = 'Đang đồng bộ báo cáo hoàn chỉnh lên trang chủ...';
+                document.getElementById('loadingText').innerText = 'Đang đồng bộ báo cáo lên hệ thống...';
 
                 const form = document.getElementById('qcForm');
                 const formData = new FormData(form);
@@ -298,7 +305,7 @@
                 document.getElementById('loadingOverlay').style.display = 'none';
 
                 if (data.success) {
-                    alert('Gửi báo cáo thành công! Quản trị viên có thể xem lại ngay trên trang chủ.');
+                    alert('Gửi báo cáo thành công!');
                     window.location.reload();
                 } else {
                     alert('Lỗi đồng bộ: ' + data.message);
