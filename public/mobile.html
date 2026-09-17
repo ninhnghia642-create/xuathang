@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biểu Mẫu Kiểm Tra Giám Sát Kho Vận Sàn - QC Report</title>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Thư viện html2pdf.js để chuyển trang web thành file PDF giữ nguyên ảnh -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 10px; color: #333; }
         .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -29,13 +30,13 @@
         .photo-box label { font-size: 12px; color: #333; margin-bottom: 6px; font-weight: bold; }
         .photo-box input[type="file"] { font-size: 11px; width: 100%; }
 
-        .btn-submit { display: block; width: 100%; padding: 14px; background: #28a745; color: white; border: none; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 25px; text-align: center; }
-        .btn-submit:hover { background: #218838; }
+        .btn-submit { display: block; width: 100%; padding: 14px; background: #004080; color: white; border: none; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 25px; text-align: center; }
+        .btn-submit:hover { background: #002b5c; }
 
         .row-flex { display: flex; gap: 15px; }
         .row-flex .form-group { flex: 1; }
 
-        #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 18px; font-weight: bold; flex-direction: column; }
+        #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 16px; font-weight: bold; flex-direction: column; text-align: center; padding: 20px;}
         .spinner { border: 5px solid #f3f3f3; border-top: 5px solid #28a745; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -43,10 +44,10 @@
 <body>
     <div id="loadingOverlay">
         <div class="spinner"></div>
-        <div>Đang tối ưu ảnh, xuất Excel và đồng bộ về máy chủ... Vui lòng đợi!</div>
+        <div id="loadingText">Đang tạo file PDF và đồng bộ toàn bộ báo cáo cùng hình ảnh về trang chủ... Vui lòng đợi!</div>
     </div>
 
-    <div class="container">
+    <div class="container" id="pdfContent">
         <h2>监装检验报告</h2>
         <div class="subtitle">BÁO CÁO KIỂM TRA GIÁM SÁT KHO VẬN SÀN (QC INSPECTION REPORT)</div>
 
@@ -54,11 +55,11 @@
             <div class="row-flex">
                 <div class="form-group">
                     <label>厂区 / Xưởng (Factory):</label>
-                    <input type="text" name="factory" required placeholder="Nhập tên xưởng...">
+                    <input type="text" name="factory" id="factoryInput" required placeholder="Nhập tên xưởng...">
                 </div>
                 <div class="form-group">
                     <label>发货PO / Mã PO:</label>
-                    <input type="text" name="po" required placeholder="Nhập mã PO xuất hàng...">
+                    <input type="text" name="po" id="poInput" required placeholder="Nhập mã PO xuất hàng...">
                 </div>
             </div>
 
@@ -180,7 +181,7 @@
             <div class="section-title">18 现场照片记录 - 18 Vị Trí Ảnh Chụp Minh Họa Giám Sát</div>
             <div class="photo-grid" id="photoGridContainer"></div>
 
-            <button type="button" class="btn-submit" onclick="saveAndUploadReport()">💾 Lưu File Excel & Gửi Về Đám Mây</button>
+            <button type="button" class="btn-submit" onclick="generatePDFAndUpload()">📥 Lưu Báo Cáo PDF & Đồng Bộ Về Trang Chủ</button>
         </form>
     </div>
 
@@ -219,8 +220,8 @@
                 img.src = e.target.result;
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 1024;
-                    const MAX_HEIGHT = 1024;
+                    const MAX_WIDTH = 900;
+                    const MAX_HEIGHT = 900;
                     let width = img.width;
                     let height = img.height;
 
@@ -236,87 +237,75 @@
                     ctx.drawImage(img, 0, 0, width, height);
 
                     canvas.toBlob(function(blob) {
-                        const compressedFile = new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() });
+                        const compressedFile = new File([blob], `photo_${id}.jpg`, { type: 'image/jpeg', lastModified: Date.now() });
                         compressedFiles[id] = compressedFile;
 
                         const output = document.getElementById(`preview_${id}`);
-                        output.innerHTML = `<img src="${canvas.toDataURL('image/jpeg', 0.75)}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;">`;
-                    }, 'image/jpeg', 0.75);
+                        output.innerHTML = `<img src="${canvas.toDataURL('image/jpeg', 0.8)}" style="width: 100%; height: 140px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;">`;
+                    }, 'image/jpeg', 0.8);
                 }
             }
         }
 
-        function saveAndUploadReport() {
-            const form = document.getElementById('qcForm');
-            const formData = new FormData(form);
-            let reportData = {};
-            formData.forEach((value, key) => { reportData[key] = value; });
+        async function generatePDFAndUpload() {
+            const factory = document.getElementById('factoryInput').value.trim();
+            const po = document.getElementById('poInput').value.trim();
 
-            // 1. Tạo file Excel chuẩn trình tự nội dung biểu mẫu
-            const wb = XLSX.utils.book_new();
-            const wsData = [
-                ["监装检验报告 - BÁO CÁO KIỂM TRA GIÁM SÁT KHO VẬN SÀN"],
-                ["Xưởng (Factory):", reportData.factory || "", "Mã PO:", reportData.po || ""],
-                ["Tổng số pallet:", reportData.total_pallet || "", "Mã Nhân Viên:", reportData.inspector_id || ""],
-                [],
-                ["--- NỘI DUNG KIỂM TRA NGOẠI QUAN ---", "", ""],
-                ["Hạng mục kiểm tra", "Tiêu chuẩn", "Lỗi"]
-            ];
-
-            for(let i=1; i<=14; i++) {
-                wsData.push([titles[i-1] || `Mục ${i}`, reportData[`chk_${i}_std`] || "", reportData[`chk_${i}_err`] || ""]);
+            if (!factory || !po) {
+                alert('Vui lòng điền đầy đủ tên Xưởng và Mã PO trước khi gửi báo cáo!');
+                return;
             }
 
-            wsData.push([]);
-            wsData.push(["--- KIỂM TRA ĐỘ ẨM ---", "", "", "", "", ""]);
-            wsData.push(["Hạng mục", "Điểm 1", "Điểm 2", "Điểm 3", "Điểm 4", "Điểm 5", "Lỗi"]);
-            wsData.push([
-                "Độ ẩm ván đậy", 
-                reportData.moisture_cover_1 || "", reportData.moisture_cover_2 || "", reportData.moisture_cover_3 || "", 
-                reportData.moisture_cover_4 || "", reportData.moisture_cover_5 || "", reportData.moisture_cover_err || ""
-            ]);
-            wsData.push([
-                "Độ ẩm pallet", 
-                reportData.moisture_pallet_1 || "", reportData.moisture_pallet_2 || "", reportData.moisture_pallet_3 || "", 
-                reportData.moisture_pallet_4 || "", reportData.moisture_pallet_5 || "", reportData.moisture_pallet_err || ""
-            ]);
-
-            wsData.push([]);
-            wsData.push(["--- KẾT LUẬN & GHI CHÚ ---"]);
-            wsData.push(["Đánh giá ngoại quan:", reportData.evaluation || ""]);
-            wsData.push(["Ghi chú:", reportData.note || ""]);
-
-            const ws = XLSX.utils.aoa_to_sheet(wsData);
-            XLSX.utils.book_append_sheet(wb, ws, "QC Report Summary");
-            
-            // Đặt tên file excel theo Mã PO và Xưởng
-            const fileName = `QC_Report_${reportData.po || 'Data'}_${reportData.factory || 'Xuong'}.xlsx`;
-            XLSX.writeFile(wb, fileName);
-
-            // 2. Gửi dữ liệu và hình ảnh lên đám mây máy chủ
             document.getElementById('loadingOverlay').style.display = 'flex';
-            for (let id in compressedFiles) {
-                formData.set(`photo_${id}`, compressedFiles[id]);
-            }
-            
-            fetch('/api/reports', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
+            document.getElementById('loadingText').innerText = 'Đang chuyển đổi trang thành tệp PDF chất lượng cao...';
+
+            const element = document.getElementById('pdfContent');
+            const opt = {
+                margin:       5,
+                filename:     `QC_Report_${po}_${factory}.pdf`,
+                image:        { type: 'jpeg', quality: 0.85 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            try {
+                // Tạo file PDF từ thư viện html2pdf
+                const pdfWorker = html2pdf().from(element).set(opt);
+                const pdfBlob = await pdfWorker.output('blob');
+                
+                // Tải file PDF về máy điện thoại của người dùng
+                pdfWorker.save();
+
+                document.getElementById('loadingText').innerText = 'Đang tải file PDF và 18 ảnh lên đám mây trang chủ...';
+
+                // Đóng gói FormData để gửi lên server
+                const form = document.getElementById('qcForm');
+                const formData = new FormData(form);
+                formData.append('pdf_report', pdfBlob, `QC_Report_${po}_${factory}.pdf`);
+
+                for (let id in compressedFiles) {
+                    formData.append(`photo_${id}`, compressedFiles[id]);
+                }
+
+                const response = await fetch('/api/reports', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
                 document.getElementById('loadingOverlay').style.display = 'none';
+
                 if (data.success) {
-                    alert('Đã lưu file Excel về máy và đồng bộ thành công lên đám mây!');
+                    alert('Đã lưu file PDF về máy và đồng bộ thành công lên trang chủ (Quản trị viên có thể xem lại)!');
                     window.location.reload();
                 } else {
-                    alert('Lỗi lưu đám mây: ' + data.message);
+                    alert('Lỗi đồng bộ đám mây: ' + data.message);
                 }
-            })
-            .catch(err => {
+            } catch (error) {
+                console.error(error);
                 document.getElementById('loadingOverlay').style.display = 'none';
-                alert('Mất kết nối mạng! Tuy nhiên file Excel chi tiết đã được lưu trực tiếp vào máy của bạn.');
-            });
+                alert('Có lỗi xảy ra khi tạo hoặc gửi file: ' + error.message);
+            }
         }
     </script>
 </body>
