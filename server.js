@@ -10,44 +10,69 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Đảm bảo thư mục uploads tồn tại an toàn
+// Đảm bảo thư mục uploads tồn tại
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// Quản lý lưu trữ file tải lên qua Multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
 const upload = multer({ storage: storage });
 
-let reports = [];
+// Cơ chế đọc/ghi dữ liệu vào tệp reports.json để không bị mất khi server restart
+const dataFilePath = path.join(__dirname, 'reports.json');
+function getReports() {
+    try {
+        if (fs.existsSync(dataFilePath)) {
+            const data = fs.readFileSync(dataFilePath, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (e) {
+        console.error('Lỗi đọc file dữ liệu:', e);
+    }
+    return [];
+}
 
-// API nhận báo cáo từ mobile (hỗ trợ lưu nhiều file ảnh)
+function saveReports(reports) {
+    try {
+        fs.writeFileSync(dataFilePath, JSON.stringify(reports, null, 2), 'utf8');
+    } catch (e) {
+        console.error('Lỗi ghi file dữ liệu:', e);
+    }
+}
+
+// API nhận báo cáo từ mobile
 app.post('/api/reports', upload.any(), (req, res) => {
     try {
+        const reports = getReports();
         const newReport = {
             id: Date.now(),
             data: req.body,
             files: req.files || [],
             createdAt: new Date()
         };
-        reports.push(newReport);
+        reports.unshift(newReport); // Đưa báo cáo mới lên đầu danh sách
+        saveReports(reports);
+
         return res.json({ success: true, message: 'Gửi báo cáo thành công!' });
     } catch (e) {
         return res.status(500).json({ success: false, message: 'Lỗi server: ' + e.message });
     }
 });
 
-// API lấy danh sách báo cáo cho admin
+// API lấy danh sách báo cáo cho trang chủ Admin
 app.get('/api/reports', (req, res) => {
-    res.json(reports);
+    res.json(getReports());
 });
 
-// API lấy chi tiết 1 báo cáo cho trang xem trước ảnh thực tế
+// API lấy chi tiết 1 báo cáo
 app.get('/api/reports/:id', (req, res) => {
     const reportId = Number(req.params.id);
+    const reports = getReports();
     const report = reports.find(r => r.id === reportId);
     if (!report) {
         return res.status(404).json({ success: false, message: 'Không tìm thấy báo cáo' });
@@ -55,10 +80,11 @@ app.get('/api/reports/:id', (req, res) => {
     res.json(report);
 });
 
-// API Xuất file Excel an toàn (ghi dữ liệu text và danh sách tên ảnh vào template)
+// API Xuất file Excel
 app.get('/api/export/:id', (req, res) => {
     try {
         const reportId = Number(req.params.id);
+        const reports = getReports();
         const report = reports.find(r => r.id === reportId);
         
         let templatePath = path.resolve(__dirname, 'template.xls.xls');

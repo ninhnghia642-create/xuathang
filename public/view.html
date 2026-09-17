@@ -2,44 +2,78 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Xem Trước Báo Cáo QC - Ảnh Thực Tế</title>
+    <title>Báo Cáo Kiểm Tra Giám Sát Kho Vận Sàn</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f4f6f9; color: #333; }
-        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #0056b3; }
-        .meta-box { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: bold; flex-wrap: wrap; gap: 10px; }
-        .grid-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
-        .photo-card { border: 1px solid #ddd; padding: 10px; border-radius: 6px; text-align: center; background: #fafafa; }
-        .photo-card img { width: 100%; height: 160px; object-fit: cover; border-radius: 4px; margin-top: 5px; }
-        .btn-print { display: block; width: 100%; padding: 12px; background: #28a745; color: white; border: none; font-size: 16px; border-radius: 5px; cursor: pointer; margin-top: 30px; text-align: center; text-decoration: none; }
+        body { font-family: Arial, sans-serif; margin: 20px; background: #fff; color: #000; }
+        .sheet-container { max-width: 950px; margin: 0 auto; border: 1px solid #000; padding: 20px; }
+        h2 { text-align: center; margin-bottom: 20px; }
+        .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .meta-table td { padding: 8px; border: 1px solid #000; font-size: 14px; }
+        
+        .photo-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .photo-table th, .photo-table td { border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle; }
+        .photo-table th { background-color: #f2f2f2; font-size: 13px; }
+        .photo-cell img { width: 140px; height: 100px; object-fit: cover; border: 1px solid #ccc; display: block; margin: 0 auto; }
+        .photo-label { font-size: 12px; font-weight: bold; margin-bottom: 4px; text-align: left; }
+        
+        .btn-print { display: block; width: 100%; padding: 12px; background: #28a745; color: white; border: none; font-size: 16px; border-radius: 4px; cursor: pointer; margin-top: 25px; text-align: center; text-decoration: none; }
         .btn-print:hover { background: #218838; }
         @media print {
             .btn-print { display: none; }
-            body { background: #fff; }
-            .container { box-shadow: none; padding: 0; }
+            body { margin: 0; }
+            .sheet-container { border: none; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>BÁO CÁO KIỂM TRA GIÁM SÁT KHO VẬN SÀN</h2>
-        <div class="meta-box">
-            <div>Xưởng/Factory: <span id="val-factory">---</span></div>
-            <div>Mã PO: <span id="val-po">---</span></div>
-            <div>Mã NV: <span id="val-inspector">---</span></div>
-        </div>
-        <p><strong>Kết luận ngoại quan:</strong> <span id="val-eval">---</span></p>
-        <p><strong>Ghi chú:</strong> <span id="val-note">---</span></p>
+    <div class="sheet-container">
+        <h2>监装检验报告<br><span style="font-size: 16px; font-weight: normal;">Báo cáo kiểm tra giám sát kho vận sàn</span></h2>
+        
+        <table class="meta-table">
+            <tr>
+                <td><strong>Xưởng / Factory:</strong> <span id="val-factory">---</span></td>
+                <td><strong>Mã PO:</strong> <span id="val-po">---</span></td>
+                <td><strong>Mã NV (Inspector):</strong> <span id="val-inspector">---</span></td>
+            </tr>
+            <tr>
+                <td colspan="2"><strong>Ngoại quan / Evaluation:</strong> <span id="val-eval">---</span></td>
+                <td><strong>Ngày kiểm tra:</strong> <span id="val-date">---</span></td>
+            </tr>
+            <tr>
+                <td colspan="3"><strong>Ghi chú / Note:</strong> <span id="val-note">---</span></td>
+            </tr>
+        </table>
 
-        <h3>Danh sách 18 vị trí ảnh thực tế</h3>
-        <div class="grid-photos" id="photo-container">
-            <!-- Nạp tự động bằng JavaScript -->
-        </div>
+        <h3>Danh sách 18 mục ảnh thực tế giám sát</h3>
+        <table class="photo-table" id="photo-table-grid">
+            <!-- Được render động qua JavaScript mô phỏng 6 hàng x 3 cột -->
+        </table>
 
         <button class="btn-print" onclick="window.print()">🖨️ In Báo Cáo / Lưu thành PDF</button>
     </div>
 
     <script>
+        const titles = [
+            "1. 整柜照片 Ảnh toàn bộ container",
+            "2. 托盘标照片 Ảnh tem pallet",
+            "3. 托盘含水率照片 Ảnh độ ẩm pallet",
+            "4. 盖板(含水率) Ảnh độ ẩm ván đậy",
+            "5. 塑钢带/缠绕膜 Ảnh dây nhựa/màng chít",
+            "6. 装车照片 Ảnh quá trình đóng xe",
+            "7. 是否淋雨(外观潮湿) Ảnh kiểm tra ẩm ướt/mưa",
+            "8. 熏蒸章照片 Ảnh dấu hun trùng",
+            "9. 批次照片-1/số lô pallet",
+            "10. 集装箱内部侧面照片 Ảnh bên trong container",
+            "11. 空箱照片 Ảnh container rỗng",
+            "12. 装满三分之一照片 Ảnh đóng 1/3",
+            "13. 装满二分之一照片 Ảnh đóng 1/2",
+            "14. 装满关一个门照片 Ảnh đóng 1 cửa",
+            "15. 装满关门照片 Ảnh đóng kín cửa",
+            "16. 车牌号照片 Ảnh biển số xe",
+            "17. 装单照片 Ảnh danh mục xuất hàng",
+            "18. 封号照片 Ảnh số chì niêm phong"
+        ];
+
         const urlParams = new URLSearchParams(window.location.search);
         const reportId = urlParams.get('id');
 
@@ -53,22 +87,33 @@
                         document.getElementById('val-inspector').innerText = report.data.inspector_id || '';
                         document.getElementById('val-eval').innerText = report.data.evaluation || '';
                         document.getElementById('val-note').innerText = report.data.note || '';
+                        document.getElementById('val-date').innerText = new Date(report.createdAt).toLocaleDateString();
                     }
 
-                    const container = document.getElementById('photo-container');
-                    container.innerHTML = '';
+                    const tableGrid = document.getElementById('photo-table-grid');
+                    tableGrid.innerHTML = '';
 
-                    for (let i = 0; i < 18; i++) {
-                        const file = report.files && report.files[i];
-                        const card = document.createElement('div');
-                        card.className = 'photo-card';
+                    // Chia 18 ảnh thành 6 hàng, mỗi hàng 3 cột
+                    for (let row = 0; row < 6; row++) {
+                        const tr = document.createElement('tr');
                         
-                        if (file) {
-                            card.innerHTML = `<strong>Vị trí ảnh ${i + 1}</strong><br><img src="/uploads/${file.filename}" alt="Ảnh QC ${i + 1}">`;
-                        } else {
-                            card.innerHTML = `<strong>Vị trí ảnh ${i + 1}</strong><br><p style="color: #999; font-style: italic; margin-top: 50px;">Chưa có ảnh</p>`;
+                        for (let col = 0; col < 3; col++) {
+                            const index = row * 3 + col; // Từ 0 đến 17
+                            const file = report.files && report.files[index];
+                            
+                            const td = document.createElement('td');
+                            td.className = 'photo-cell';
+                            
+                            let htmlContent = `<div class="photo-label">${titles[index] || `Ảnh ${index + 1}`}</div>`;
+                            if (file) {
+                                htmlContent += `<img src="/uploads/${file.filename}" alt="Ảnh ${index + 1}">`;
+                            } else {
+                                htmlContent += `<div style="height: 100px; line-height: 100px; color: #888; font-style: italic;">Chưa có ảnh</div>`;
+                            }
+                            td.innerHTML = htmlContent;
+                            tr.appendChild(td);
                         }
-                        container.appendChild(card);
+                        tableGrid.appendChild(tr);
                     }
                 })
                 .catch(err => {
