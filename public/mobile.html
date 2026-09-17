@@ -12,27 +12,27 @@
         h2 { text-align: center; color: #004080; margin-bottom: 5px; font-size: 20px; }
         .subtitle { text-align: center; font-weight: bold; margin-bottom: 20px; color: #555; font-size: 13px; }
 
-        .section-title { font-weight: bold; background: #e9ecef; padding: 8px 12px; margin-top: 20px; margin-bottom: 10px; border-left: 4px solid #004080; font-size: 14px; }
+        .section-title { font-weight: bold; background: #e9ecef; padding: 8px 12px; margin-top: 20px; margin-bottom: 10px; border-left: 4px solid #004080; font-size: 14px; page-break-after: avoid; break-after: avoid; }
 
         .form-group { margin-bottom: 12px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; }
         input[type="text"], select, textarea { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
         
-        .excel-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; font-size: 12px; }
+        .excel-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; font-size: 12px; page-break-inside: avoid; break-inside: avoid; }
         .excel-table th, .excel-table td { border: 1px solid #bbb; padding: 6px; text-align: center; vertical-align: middle; }
         .excel-table th { background-color: #f2f2f2; color: #000; font-weight: bold; }
         .excel-table td.text-left { text-align: left; }
         .excel-table input, .excel-table select { width: 100%; padding: 4px; border: 1px solid #ddd; border-radius: 3px; text-align: center; font-size: 12px; }
 
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; margin-top: 10px; }
-        .photo-box { background: #fafafa; border: 1px solid #ddd; padding: 10px; border-radius: 6px; }
+        .photo-box { background: #fafafa; border: 1px solid #ddd; padding: 10px; border-radius: 6px; page-break-inside: avoid; break-inside: avoid; }
         .photo-box label { font-size: 12px; color: #333; margin-bottom: 6px; font-weight: bold; }
         .photo-box input[type="file"] { font-size: 11px; width: 100%; }
 
         .btn-submit { display: block; width: 100%; padding: 14px; background: #004080; color: white; border: none; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 25px; text-align: center; }
         .btn-submit:hover { background: #002b5c; }
 
-        .row-flex { display: flex; gap: 15px; }
+        .row-flex { display: flex; gap: 15px; page-break-inside: avoid; break-inside: avoid; }
         .row-flex .form-group { flex: 1; }
 
         #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 16px; font-weight: bold; flex-direction: column; text-align: center; padding: 20px;}
@@ -43,7 +43,7 @@
 <body>
     <div id="loadingOverlay">
         <div class="spinner"></div>
-        <div id="loadingText">Đang tạo file PDF và đồng bộ toàn bộ báo cáo cùng hình ảnh lên trang chủ... Vui lòng đợi!</div>
+        <div id="loadingText">Đang tối ưu tệp PDF và đồng bộ toàn bộ báo cáo lên trang chủ... Vui lòng đợi!</div>
     </div>
 
     <div class="container" id="pdfContent">
@@ -256,14 +256,19 @@
             }
 
             document.getElementById('loadingOverlay').style.display = 'flex';
-            document.getElementById('loadingText').innerText = 'Đang tạo tệp PDF chất lượng cao...';
+            document.getElementById('loadingText').innerText = 'Đang tối ưu và tạo tệp PDF đầy đủ...';
 
             const element = document.getElementById('pdfContent');
             const opt = {
-                margin:       5,
+                margin:       [5, 5, 5, 5],
                 filename:     `QC_Report_${po}_${factory}.pdf`,
-                image:        { type: 'jpeg', quality: 0.85 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                image:        { type: 'jpeg', quality: 0.8 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true, 
+                    logging: false,
+                    letterRendering: true
+                },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
