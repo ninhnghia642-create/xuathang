@@ -2,167 +2,250 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Hệ Thống Quản Lý Báo Cáo QC</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biểu Mẫu Kiểm Tra Giám Sát Kho Vận Sàn - QC Report</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; background: #f4f6f9; }
-        .login-container { width: 350px; margin: 100px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .admin-container { padding: 30px; max-width: 1200px; margin: 0 auto; }
-        h2 { text-align: center; color: #0056b3; }
-        input, button { width: 100%; padding: 10px; margin-top: 10px; box-sizing: border-box; border-radius: 4px; border: 1px solid #ccc; }
-        button { background: #007bff; color: white; border: none; font-weight: bold; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        th, td { padding: 12px; border: 1px solid #dee2e6; text-align: left; font-size: 14px; }
-        th { background-color: #007bff; color: white; }
-        .btn { padding: 6px 12px; border-radius: 4px; text-decoration: none; color: white; display: inline-block; font-size: 13px; margin-right: 5px; }
-        .btn-view { background-color: #17a2b8; }
-        .btn-excel { background-color: #28a745; }
-        .section-box { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 15px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 10px; color: #333; }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        
+        h2 { text-align: center; color: #004080; margin-bottom: 5px; font-size: 20px; }
+        .subtitle { text-align: center; font-weight: bold; margin-bottom: 20px; color: #555; font-size: 13px; }
+
+        .section-title { font-weight: bold; background: #e9ecef; padding: 8px 12px; margin-top: 20px; margin-bottom: 10px; border-left: 4px solid #004080; font-size: 14px; }
+
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; }
+        input[type="text"], select, textarea { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        
+        /* Bảng kiểm tra ngoại quan & độ ẩm style Excel */
+        .excel-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; font-size: 12px; }
+        .excel-table th, .excel-table td { border: 1px solid #bbb; padding: 6px; text-align: center; vertical-align: middle; }
+        .excel-table th { background-color: #f2f2f2; color: #000; font-weight: bold; }
+        .excel-table td.text-left { text-align: left; }
+        .excel-table input, .excel-table select { width: 100%; padding: 4px; border: 1px solid #ddd; border-radius: 3px; text-align: center; font-size: 12px; }
+
+        /* Lưới 18 ảnh */
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; margin-top: 10px; }
+        .photo-box { background: #fafafa; border: 1px solid #ddd; padding: 10px; border-radius: 6px; }
+        .photo-box label { font-size: 12px; color: #333; margin-bottom: 6px; font-weight: bold; }
+        .photo-box input[type="file"] { font-size: 11px; }
+
+        .btn-submit { display: block; width: 100%; padding: 14px; background: #28a745; color: white; border: none; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 25px; text-align: center; }
+        .btn-submit:hover { background: #218838; }
+
+        .row-flex { display: flex; gap: 15px; }
+        .row-flex .form-group { flex: 1; }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h2>监装检验报告</h2>
+        <div class="subtitle">BÁO CÁO KIỂM TRA GIÁM SÁT KHO VẬN SÀN (QC INSPECTION REPORT)</div>
 
-    <!-- KHUNG ĐĂNG NHẬP -->
-    <div id="loginSection" class="login-container">
-        <h2>Đăng Nhập Hệ Thống</h2>
-        <form id="loginForm">
-            <label>Tên đăng nhập:</label>
-            <input type="text" id="username" required placeholder="admin">
-            <label>Mật khẩu:</label>
-            <input type="password" id="password" required placeholder="Ab@123456">
-            <button type="submit">Đăng Nhập</button>
+        <form id="qcForm">
+            <!-- Thông tin chung -->
+            <div class="row-flex">
+                <div class="form-group">
+                    <label>厂区 / Xưởng (Factory):</label>
+                    <input type="text" name="factory" required placeholder="Nhập tên xưởng...">
+                </div>
+                <div class="form-group">
+                    <label>发货PO / Mã PO:</label>
+                    <input type="text" name="po" required placeholder="Nhập mã PO xuất hàng...">
+                </div>
+            </div>
+
+            <div class="row-flex">
+                <div class="form-group">
+                    <label>总托数 / Tổng số pallet (Total Pallets):</label>
+                    <input type="text" name="total_pallet" placeholder="Ví dụ: 24">
+                </div>
+                <div class="form-group">
+                    <label>监仓员 / Mã Nhân Viên Kiểm Tra (Inspector ID):</label>
+                    <input type="text" name="inspector_id" required placeholder="Nhập mã nhân viên...">
+                </div>
+            </div>
+
+            <!-- Bảng Nội dung kiểm tra ngoại quan -->
+            <div class="section-title">外观检验 - Nội Dung Kiểm Tra Ngoại Quan</div>
+            <table class="excel-table">
+                <tr>
+                    <th>Hạng mục kiểm tra<br>(检验项目)</th>
+                    <th>Tiêu chuẩn<br>(标准要求)</th>
+                    <th>Lỗi<br>(不合格品数)</th>
+                    <th>Hạng mục kiểm tra<br>(检验项目)</th>
+                    <th>Tiêu chuẩn<br>(标准要求)</th>
+                    <th>Lỗi<br>(不合格品数)</th>
+                </tr>
+                <tr>
+                    <td class="text-left">Đối chiếu mã hợp đồng<br>(合同号核对)</td>
+                    <td><input type="text" name="chk_1_std" value="是"></td>
+                    <td><input type="text" name="chk_1_err" value="无"></td>
+                    <td class="text-left">Đai nhựa tốt không?<br>(塑钢带是否完好)</td>
+                    <td><input type="text" name="chk_2_std" value="是"></td>
+                    <td><input type="text" name="chk_2_err" value="无"></td>
+                </tr>
+                <tr>
+                    <td class="text-left">Pallet mốc / hư hỏng<br>(托盘是否发霉破损)</td>
+                    <td><input type="text" name="chk_3_std" value="否"></td>
+                    <td><input type="text" name="chk_3_err" value="无"></td>
+                    <td class="text-left">Thùng carton hở keo<br>(纸箱开胶)</td>
+                    <td><input type="text" name="chk_4_std" value="否"></td>
+                    <td><input type="text" name="chk_4_err" value="无"></td>
+                </tr>
+                <tr>
+                    <td class="text-left">Đinh lộ ra ngoài pallet<br>(托盘是否钉子外漏)</td>
+                    <td><input type="text" name="chk_5_std" value="否"></td>
+                    <td><input type="text" name="chk_5_err" value="无"></td>
+                    <td class="text-left">Thùng carton rách/mốc<br>(纸箱破损 发霉)</td>
+                    <td><input type="text" name="chk_6_std" value="否"></td>
+                    <td><input type="text" name="chk_6_err" value="无"></td>
+                </tr>
+                <tr>
+                    <td class="text-left">Trụ gỗ dưới pallet tốt<br>(托盘底部档位木墩完好)</td>
+                    <td><input type="text" name="chk_7_std" value="是"></td>
+                    <td><input type="text" name="chk_7_err" value="无"></td>
+                    <td class="text-left">Pallet có bị lệch không<br>(整托是否移位)</td>
+                    <td><input type="text" name="chk_8_std" value="否"></td>
+                    <td><input type="text" name="chk_8_err" value="无"></td>
+                </tr>
+                <tr>
+                    <td class="text-left">Tem chống giả<br>(防伪标是否漏贴)</td>
+                    <td><input type="text" name="chk_9_std" value="否"></td>
+                    <td><input type="text" name="chk_9_err" value="无"></td>
+                    <td class="text-left">Độ ẩm ván đậy<br>(盖板湿度)</td>
+                    <td><input type="text" name="chk_10_std" value="否"></td>
+                    <td><input type="text" name="chk_10_err" value="无"></td>
+                </tr>
+                <tr>
+                    <td class="text-left">Ván đậy bị mốc<br>(盖板是否发霉)</td>
+                    <td><input type="text" name="chk_11_std" value="否"></td>
+                    <td><input type="text" name="chk_11_err" value="无"></td>
+                    <td class="text-left">Đóng công dính mưa<br>(装柜是否淋雨)</td>
+                    <td><input type="text" name="chk_12_std" value="否"></td>
+                    <td><input type="text" name="chk_12_err" value="无"></td>
+                </tr>
+                <tr>
+                    <td class="text-left">Bề ngoài ẩm ướt<br>(外观潮湿)</td>
+                    <td><input type="text" name="chk_13_std" value="否"></td>
+                    <td><input type="text" name="chk_13_err" value="无"></td>
+                    <td class="text-left">Màng chít có vết mưa<br>(缠绕膜是否有雨渍)</td>
+                    <td><input type="text" name="chk_14_std" value="否"></td>
+                    <td><input type="text" name="chk_14_err" value="无"></td>
+                </tr>
+            </table>
+
+            <!-- Bảng kiểm tra độ ẩm (Ván đậy & Pallet) -->
+            <div class="section-title">盖板含水率 & 托盘含水率 - Kiểm Tra Độ Ẩm (Ván đậy & Pallet)</div>
+            <table class="excel-table">
+                <tr>
+                    <th>Hạng mục<br>Mục kiểm tra</th>
+                    <th>Điểm 1</th>
+                    <th>Điểm 2</th>
+                    <th>Điểm 3</th>
+                    <th>Điểm 4</th>
+                    <th>Điểm 5</th>
+                    <th>Lỗi / Ghi chú</th>
+                </tr>
+                <tr>
+                    <td class="text-left"><b>Độ ẩm ván đậy</b><br>盖板含水率(≤20)</td>
+                    <td><input type="text" name="moisture_cover_1" placeholder="7"></td>
+                    <td><input type="text" name="moisture_cover_2" placeholder="14"></td>
+                    <td><input type="text" name="moisture_cover_3" placeholder="14"></td>
+                    <td><input type="text" name="moisture_cover_4" placeholder="5"></td>
+                    <td><input type="text" name="moisture_cover_5" placeholder="9"></td>
+                    <td><input type="text" name="moisture_cover_err" value="无"></td>
+                </tr>
+                <tr>
+                    <td class="text-left"><b>Độ ẩm pallet</b><br>托盘含水率(≤20)</td>
+                    <td><input type="text" name="moisture_pallet_1" placeholder="10"></td>
+                    <td><input type="text" name="moisture_pallet_2" placeholder="15"></td>
+                    <td><input type="text" name="moisture_pallet_3" placeholder="13"></td>
+                    <td><input type="text" name="moisture_pallet_4" placeholder="13"></td>
+                    <td><input type="text" name="moisture_pallet_5" placeholder="11"></td>
+                    <td><input type="text" name="moisture_pallet_err" value="无"></td>
+                </tr>
+            </table>
+
+            <!-- Đánh giá và Ghi chú -->
+            <div class="section-title">外观判定 & 备注 - Kết Luận & Ghi Chú</div>
+            <div class="row-flex">
+                <div class="form-group">
+                    <label>外观判定 / Đánh giá ngoại quan (Evaluation):</label>
+                    <select name="evaluation">
+                        <option value="合格" selected>合格 (Đạt / Pass)</option>
+                        <option value="不合格">不合格 (Không đạt / Fail)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>备注 / Ghi chú (Note):</label>
+                    <input type="text" name="note" placeholder="Nhập ghi chú nếu có...">
+                </div>
+            </div>
+
+            <!-- 18 vị trí ảnh chụp -->
+            <div class="section-title">18 现场照片记录 - 18 Vị Trí Ảnh Chụp Minh Họa Giám Sát</div>
+            <div class="photo-grid" id="photoGridContainer">
+                <!-- Javascript sẽ tự sinh đủ 18 ô ảnh khớp đúng tên chuẩn template -->
+            </div>
+
+            <button type="submit" class="btn-submit">🚀 Gửi Báo Cáo Kiểm Tra Ngay</button>
         </form>
     </div>
 
-    <!-- KHUNG QUẢN TRỊ ADMIN -->
-    <div id="adminSection" style="display: none;">
-        <div class="top-bar">
-            <h2>Hệ Thống Quản Lý Báo Cáo Giám Sát Kho Vận Sàn</h2>
-            <button style="width: auto; padding: 8px 15px; background: #dc3545;" onclick="logout()">Đăng Xuất</button>
-        </div>
-
-        <div class="admin-container">
-            <!-- Tạo tài khoản nhân viên -->
-            <div class="section-box">
-                <h3>Tạo Tài Khoản Nhân Viên Mới</h3>
-                <form id="createUserForm" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: flex-end;">
-                    <div>
-                        <label>Mã NV / Tên đăng nhập:</label>
-                        <input type="text" id="newUsername" required placeholder="vd: NV001">
-                    </div>
-                    <div>
-                        <label>Họ tên nhân viên:</label>
-                        <input type="text" id="newName" required placeholder="vd: Nguyễn Văn A">
-                    </div>
-                    <div>
-                        <label>Mật khẩu:</label>
-                        <input type="password" id="newPassword" required placeholder="Mật khẩu">
-                    </div>
-                    <button type="submit" style="height: 41px;">Tạo Tài Khoản</button>
-                </form>
-            </div>
-
-            <!-- Danh sách báo cáo -->
-            <div class="section-box">
-                <h3>Danh Sách Báo Cáo Gửi Về</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Xưởng (Factory)</th>
-                            <th>Mã PO</th>
-                            <th>Mã NV</th>
-                            <th>Thời gian</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reportTableBody">
-                        <tr><td colspan="6" style="text-align: center;">Đang tải dữ liệu...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // Kiểm tra trạng thái đăng nhập sẵn
-        if (localStorage.getItem('isLoggedIn') === 'true') {
-            showAdmin();
-        }
+        const titles = [
+            "1. 整柜照片 (Ảnh toàn bộ container)",
+            "2. 托盘标照片 (Ảnh tem pallet)",
+            "3. 托盘含水率照片 (Ảnh độ ẩm pallet)",
+            "4. 盖板（含水率） (Ảnh độ ẩm ván đậy)",
+            "5. 塑钢带 缠绕膜 (Ảnh dây nhựa và màng bọc)",
+            "6. 装车照片 (Ảnh đóng công / xe)",
+            "7. 是否淋雨 (Ảnh trời mưa / ẩm ướt)",
+            "8. 熏蒸章图片 (Ảnh dấu hun trùng)",
+            "9. 批次照片-1 (Ảnh số lô pallet)",
+            "10. 集装箱内部侧面照片 (Ảnh sườn container)",
+            "11. 空箱照片 (Ảnh container rỗng)",
+            "12. 装满三分之一照片 (Ảnh đóng 1/3 container)",
+            "13. 装满二分之一照片 (Ảnh đóng 1/2 container)",
+            "14. 装满关一个门照片 (Ảnh đóng 1 cửa container)",
+            "15. 装满关门照片 (Ảnh đóng toàn bộ cửa container)",
+            "16. 车牌号照片 (Ảnh biển số xe)",
+            "17. 装箱单照片 (Ảnh danh mục xuất hàng)",
+            "18. 封号照片 (Ảnh số chì niêm phong)"
+        ];
 
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            const res = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await res.json();
-            if (data.success) {
-                localStorage.setItem('isLoggedIn', 'true');
-                showAdmin();
-            } else {
-                alert(data.message);
-            }
+        const gridContainer = document.getElementById('photoGridContainer');
+        titles.forEach((title, index) => {
+            const div = document.createElement('div');
+            div.className = 'photo-box';
+            div.innerHTML = `
+                <label>${title}</label>
+                <input type="file" name="photo_${index + 1}" accept="image/*" capture="environment">
+            `;
+            gridContainer.appendChild(div);
         });
 
-        function showAdmin() {
-            document.getElementById('loginSection').style.display = 'none';
-            document.getElementById('adminSection').style.display = 'block';
-            loadReports();
-        }
-
-        function logout() {
-            localStorage.removeItem('isLoggedIn');
-            location.reload();
-        }
-
-        async function loadReports() {
-            const res = await fetch('/api/reports');
-            const reports = await res.json();
-            const tbody = document.getElementById('reportTableBody');
-            tbody.innerHTML = '';
-            if (reports.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Chưa có báo cáo nào được gửi về.</td></tr>';
-                return;
-            }
-            reports.forEach(r => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${r.id}</td>
-                    <td>${r.data.factory || ''}</td>
-                    <td>${r.data.po || ''}</td>
-                    <td>${r.data.inspector_id || ''}</td>
-                    <td>${new Date(r.createdAt).toLocaleString()}</td>
-                    <td>
-                        <a class="btn btn-view" href="/view.html?id=${r.id}" target="_blank">Xem Báo Cáo & Ảnh</a>
-                        <a class="btn btn-excel" href="/api/export/${r.id}">Tải Excel Mẫu</a>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+        document.getElementById('qcForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const username = document.getElementById('newUsername').value;
-            const name = document.getElementById('newName').value;
-            const password = document.getElementById('newPassword').value;
-
-            const res = await fetch('/api/users', {
+            const formData = new FormData(this);
+            
+            fetch('/api/reports', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, name, password })
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Gửi báo cáo thành công!');
+                    window.location.reload();
+                } else {
+                    alert('Lỗi: ' + data.message);
+                }
+            })
+            .catch(err => {
+                alert('Có lỗi xảy ra khi kết nối tới máy chủ!');
             });
-            const data = await res.json();
-            alert(data.message);
-            if (data.success) {
-                document.getElementById('createUserForm').reset();
-            }
         });
     </script>
 </body>
