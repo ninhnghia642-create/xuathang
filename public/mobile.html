@@ -28,7 +28,7 @@
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; margin-top: 10px; }
         .photo-box { background: #fafafa; border: 1px solid #ddd; padding: 10px; border-radius: 6px; }
         .photo-box label { font-size: 12px; color: #333; margin-bottom: 6px; font-weight: bold; }
-        .photo-box input[type="file"] { font-size: 11px; }
+        .photo-box input[type="file"] { font-size: 11px; width: 100%; }
 
         .btn-submit { display: block; width: 100%; padding: 14px; background: #28a745; color: white; border: none; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 25px; text-align: center; }
         .btn-submit:hover { background: #218838; }
@@ -186,7 +186,7 @@
             <!-- 18 vị trí ảnh chụp -->
             <div class="section-title">18 现场照片记录 - 18 Vị Trí Ảnh Chụp Minh Họa Giám Sát</div>
             <div class="photo-grid" id="photoGridContainer">
-                <!-- Javascript sinh đủ 18 ô ảnh khớp chuẩn template -->
+                <!-- Javascript sinh đủ 18 ô ảnh khớp chuẩn template và có xem trước thumbnail -->
             </div>
 
             <button type="submit" class="btn-submit">🚀 Gửi Báo Cáo Kiểm Tra Ngay</button>
@@ -221,10 +221,22 @@
             div.className = 'photo-box';
             div.innerHTML = `
                 <label>${title}</label>
-                <input type="file" name="photo_${index + 1}" accept="image/*" capture="environment">
+                <input type="file" name="photo_${index + 1}" accept="image/*" capture="environment" onchange="previewImage(event, ${index + 1})">
+                <div id="preview_${index + 1}" style="margin-top: 8px;"></div>
             `;
             gridContainer.appendChild(div);
         });
+
+        function previewImage(event, id) {
+            const reader = new FileReader();
+            reader.onload = function(){
+                const output = document.getElementById(`preview_${id}`);
+                output.innerHTML = `<img src="${reader.result}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;">`;
+            };
+            if (event.target.files[0]) {
+                reader.readAsDataURL(event.target.files[0]);
+            }
+        }
 
         document.getElementById('qcForm').addEventListener('submit', function(e) {
             e.preventDefault();

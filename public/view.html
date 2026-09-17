@@ -2,146 +2,115 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Báo Cáo Kiểm Tra Giám Sát Kho Vận Sàn</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xem Chi Tiết Báo Cáo Kiểm Tra Giám Sát Kho Vận - QC Report</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 15px; background: #fff; color: #000; font-size: 13px; }
-        .sheet-container { max-width: 1000px; margin: 0 auto; border: 1.5px solid #000; padding: 20px; background: #fff; }
+        body { font-family: Arial, sans-serif; background: #eef2f5; margin: 0; padding: 20px; color: #333; }
+        .sheet { max-width: 950px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        h2 { text-align: center; color: #000; margin-bottom: 2px; font-size: 20px; }
-        .subtitle { text-align: center; font-weight: bold; margin-bottom: 15px; color: #333; font-size: 13px; }
-        
-        /* Bảng thông tin chung */
-        .meta-table, .inspect-table, .photo-table, .footer-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .meta-table td, .inspect-table th, .inspect-table td, .photo-table th, .photo-table td, .footer-table td { 
-            border: 1px solid #000; padding: 6px 8px; vertical-align: middle; 
-        }
-        
-        .inspect-table th { background-color: #f2f2f2; text-align: center; font-size: 12px; }
-        .inspect-table td { font-size: 12px; }
-        
-        .section-title { font-weight: bold; background: #e6e6e6; padding: 6px; border: 1px solid #000; border-bottom: none; font-size: 13px; }
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #004080; padding-bottom: 15px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; text-decoration: none; display: inline-block; text-align: center; }
+        .btn-print { background: #004080; color: #fff; }
+        .btn-print:hover { background: #002d59; }
+        .btn-back { background: #6c757d; color: #fff; }
+        .btn-back:hover { background: #5a6268; }
 
-        /* Bảng ảnh thực tế */
-        .photo-table th { background-color: #0056b3; color: white; font-size: 12px; text-align: center; padding: 6px; }
-        .photo-cell img { width: 140px; height: 100px; object-fit: cover; border: 1px solid #ccc; display: block; margin: 0 auto; }
-        .photo-label { font-size: 11px; font-weight: bold; margin-bottom: 4px; text-align: left; }
-        
-        .btn-print { display: block; width: 100%; padding: 12px; background: #28a745; color: white; border: none; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 20px; text-align: center; }
-        .btn-print:hover { background: #218838; }
+        h2 { text-align: center; color: #004080; margin: 0 0 5px 0; font-size: 22px; }
+        .subtitle { text-align: center; font-weight: bold; margin-bottom: 25px; color: #555; font-size: 13px; }
 
+        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #ddd; }
+        .info-item { font-size: 14px; }
+        .info-item span { font-weight: bold; color: #333; }
+
+        .section-title { font-weight: bold; background: #e9ecef; padding: 8px 12px; margin-top: 25px; margin-bottom: 12px; border-left: 4px solid #004080; font-size: 14px; }
+
+        /* Bảng phong cách Excel */
+        .excel-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px; }
+        .excel-table th, .excel-table td { border: 1px solid #bbb; padding: 8px; text-align: center; vertical-align: middle; }
+        .excel-table th { background-color: #f2f2f2; color: #000; font-weight: bold; }
+        .excel-table td.text-left { text-align: left; }
+
+        /* Lưới hiển thị 18 ảnh cứng trực tiếp */
+        .photo-display-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; }
+        .photo-card { background: #fafafa; border: 1px solid #ddd; border-radius: 6px; padding: 10px; text-align: center; page-break-inside: avoid; }
+        .photo-card h4 { font-size: 12px; color: #333; margin: 0 0 8px 0; min-height: 28px; display: flex; align-items: center; justify-content: center; }
+        .photo-card img { width: 100%; height: 160px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; background: #eee; }
+        .no-photo { font-size: 11px; color: #999; font-style: italic; height: 160px; display: flex; align-items: center; justify-content: center; border: 1px dashed #ccc; border-radius: 4px; background: #fff; }
+
+        /* CSS khi in ấn / xuất PDF */
         @media print {
-            .btn-print { display: none; }
-            body { margin: 0; }
-            .sheet-container { border: none; padding: 0; max-width: 100%; }
+            body { background: #fff; padding: 0; }
+            .sheet { box-shadow: none; padding: 10px; max-width: 100%; }
+            .header-actions { display: none; }
+            .photo-card { break-inside: avoid; page-break-inside: avoid; }
+            @page { size: A4 portrait; margin: 15mm; }
         }
     </style>
 </head>
 <body>
-    <div class="sheet-container">
+    <div class="sheet">
+        <!-- Nút điều hướng -->
+        <div class="header-actions">
+            <a href="/" class="btn btn-back">⬅ Quay lại danh sách</a>
+            <button onclick="window.print()" class="btn btn-print">🖨 In Báo Cáo / Xuất PDF</button>
+        </div>
+
         <h2>监装检验报告</h2>
-        <div class="subtitle">BÁO CÁO KIỂM TRA GIÁM SÁT KHO VẬN SÀN (PHÂN TÍCH NGOẠI QUAN)</div>
-        
-        <!-- Thông tin đầu trang -->
-        <table class="meta-table">
-            <tr>
-                <td width="33%"><strong>Xưởng / 厂区:</strong> <span id="val-factory">---</span></td>
-                <td width="34%"><strong>Mã PO / 发货PO:</strong> <span id="val-po">---</span></td>
-                <td width="33%"><strong>Tổng số pallet / 总托数:</strong> <span id="val-total-pallet">---</span></td>
-            </tr>
+        <div class="subtitle">BÁO CÁO KIỂM TRA GIÁM SÁT KHO VẬN SÀN (QC INSPECTION REPORT)</div>
+
+        <!-- Thông tin chung -->
+        <div class="info-grid" id="generalInfo">
+            <!-- Dữ liệu được nhúng tự động bằng Javascript -->
+        </div>
+
+        <!-- Bảng Nội dung kiểm tra ngoại quan -->
+        <div class="section-title">外观检验 - Nội Dung Kiểm Tra Ngoại Quan</div>
+        <table class="excel-table">
+            <thead>
+                <tr>
+                    <th>Hạng mục kiểm tra<br>(检验项目)</th>
+                    <th>Tiêu chuẩn<br>(标准要求)</th>
+                    <th>Lỗi<br>(不合格品数)</th>
+                    <th>Hạng mục kiểm tra<br>(检验项目)</th>
+                    <th>Tiêu chuẩn<br>(标准要求)</th>
+                    <th>Lỗi<br>(不合格品数)</th>
+                </tr>
+            </thead>
+            <tbody id="appearanceTableBody">
+                <!-- Dữ liệu ngoại quan -->
+            </tbody>
         </table>
 
-        <!-- Tiêu đề mục kiểm tra ngoại quan -->
-        <div class="section-title">外观检验 (Nội dung kiểm tra ngoại quan)</div>
-        <table class="inspect-table">
-            <tr>
-                <th width="28%">Hạng mục kiểm tra</th>
-                <th width="12%">Tiêu chuẩn</th>
-                <th width="10%">Lỗi</th>
-                <th width="28%">Hạng mục kiểm tra</th>
-                <th width="12%">Tiêu chuẩn</th>
-                <th width="10%">Lỗi</th>
-            </tr>
-            <tr>
-                <td>Đối chiếu mã hợp đồng (合同号核对)</td>
-                <td align="center">是</td>
-                <td align="center">无</td>
-                <td>Đai nhựa có tốt không (塑钢带是否完好)</td>
-                <td align="center">是</td>
-                <td align="center">无</td>
-            </tr>
-            <tr>
-                <td>Pallet mốc / hư hỏng (托盘是否发霉破损)</td>
-                <td align="center">否</td>
-                <td align="center">无</td>
-                <td>Thùng carton hở keo (纸箱开胶)</td>
-                <td align="center">否</td>
-                <td align="center">无</td>
-            </tr>
-            <tr>
-                <td>Đinh lộ ra ngoài pallet (托盘是否钉子外漏)</td>
-                <td align="center">否</td>
-                <td align="center">无</td>
-                <td>Thùng carton rách / mốc (纸箱破损 发霉)</td>
-                <td align="center">否</td>
-                <td align="center">无</td>
-            </tr>
-            <tr>
-                <td>Trụ gỗ dưới pallet tốt (托盘底部档位木墩完好)</td>
-                <td align="center">是</td>
-                <td align="center">无</td>
-                <td>Pallet bị lệch (整托是否移位)</td>
-                <td align="center">否</td>
-                <td align="center">无</td>
-            </tr>
-            <tr>
-                <td>Tem chống giả (防伪标是否漏贴)</td>
-                <td align="center">否</td>
-                <td align="center">无</td>
-                <td>Độ ẩm ván đậy (盖板湿度)</td>
-                <td align="center">否</td>
-                <td align="center">无</td>
-            </tr>
-            <tr>
-                <td>Ván đậy bị mốc (盖板是否发霉)</td>
-                <td align="center">否</td>
-                <td align="center">无</td>
-                <td>Đóng công dính mưa (装柜是否淋雨)</td>
-                <td align="center">否</td>
-                <td align="center">无</td>
-            </tr>
-            <tr>
-                <td>Bề ngoài ẩm ướt (外观潮湿)</td>
-                <td align="center">否</td>
-                <td align="center">无</td>
-                <td>Màng chít có vết mưa (缠绕膜是否有雨渍)</td>
-                <td align="center">否</td>
-                <td align="center">无</td>
-            </tr>
+        <!-- Bảng kiểm tra độ ẩm -->
+        <div class="section-title">盖板含水率 & 托盘含水率 - Kiểm Tra Độ Ẩm (Ván đậy & Pallet)</div>
+        <table class="excel-table">
+            <thead>
+                <tr>
+                    <th>Hạng mục<br>Mục kiểm tra</th>
+                    <th>Điểm 1</th>
+                    <th>Điểm 2</th>
+                    <th>Điểm 3</th>
+                    <th>Điểm 4</th>
+                    <th>Điểm 5</th>
+                    <th>Lỗi / Ghi chú</th>
+                </tr>
+            </thead>
+            <tbody id="moistureTableBody">
+                <!-- Dữ liệu độ ẩm -->
+            </tbody>
         </table>
 
-        <!-- 18 Vị trí ảnh chụp thực tế -->
-        <div class="section-title" style="margin-top: 15px;">18 现场照片记录 (Danh sách 18 vị trí ảnh chụp thực tế giám sát)</div>
-        <table class="photo-table" id="photo-table-grid">
-            <!-- Render tự động qua JS -->
-        </table>
+        <!-- Đánh giá và Ghi chú -->
+        <div class="section-title">外观判定 & 备注 - Kết Luận & Ghi Chú</div>
+        <div class="info-grid" id="conclusionInfo" style="margin-bottom: 25px;">
+            <!-- Kết luận -->
+        </div>
 
-        <!-- Kết luận và Ghi chú -->
-        <table class="footer-table" style="margin-top: 15px;">
-            <tr>
-                <td width="20%"><strong>Đánh giá ngoại quan<br>(外观判定):</strong></td>
-                <td width="80%" style="font-weight: bold; color: #007bff; font-size: 15px;" id="val-eval">合格 (Đạt)</td>
-            </tr>
-            <tr>
-                <td><strong>Ghi chú (备注):</strong></td>
-                <td id="val-note">---</td>
-            </tr>
-            <tr>
-                <td><strong>Người giám sát kho<br>(监仓员):</strong></td>
-                <td><span id="val-inspector">---</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>Thời gian kiểm tra (检验日期):</strong> <span id="val-date">---</span></td>
-            </tr>
-        </table>
-
-        <button class="btn-print" onclick="window.print()">🖨️ In Báo Cáo / Lưu thành PDF chuẩn mẫu</button>
+        <!-- 18 vị trí ảnh chụp cứng hiển thị trực tiếp -->
+        <div class="section-title">18 现场照片记录 - 18 Vị Trí Ảnh Chụp Minh Họa Giám Sát</div>
+        <div class="photo-display-grid" id="photoDisplayGrid">
+            <!-- 18 ảnh sẽ được render tại đây -->
+        </div>
     </div>
 
     <script>
@@ -150,67 +119,136 @@
             "2. 托盘标照片 (Ảnh tem pallet)",
             "3. 托盘含水率照片 (Ảnh độ ẩm pallet)",
             "4. 盖板（含水率） (Ảnh độ ẩm ván đậy)",
-            "5. 塑钢带 缠绕膜 (Ảnh dây nhựa / màng bọc)",
-            "6. 装车照片 (Ảnh quá trình đóng xe)",
-            "7. 是否淋雨 (Ảnh kiểm tra ẩm ướt / mưa)",
+            "5. 塑钢带 缠绕膜 (Ảnh dây nhựa và màng bọc)",
+            "6. 装车照片 (Ảnh đóng công / xe)",
+            "7. 是否淋雨 (Ảnh trời mưa / ẩm ướt)",
             "8. 熏蒸章图片 (Ảnh dấu hun trùng)",
             "9. 批次照片-1 (Ảnh số lô pallet)",
-            "10. 集装箱内部侧面照片 (Ảnh bên trong container)",
+            "10. 集装箱内部侧面照片 (Ảnh sườn container)",
             "11. 空箱照片 (Ảnh container rỗng)",
-            "12. 装满三分之一照片 (Ảnh đóng 1/3 công)",
-            "13. 装满二分之一照片 (Ảnh đóng 1/2 công)",
-            "14. 装满关一个门照片 (Ảnh đóng 1 cửa)",
-            "15. 装满关门照片 (Ảnh đóng kín cửa)",
+            "12. 装满三分之一照片 (Ảnh đóng 1/3 container)",
+            "13. 装满二分之一照片 (Ảnh đóng 1/2 container)",
+            "14. 装满关一个门照片 (Ảnh đóng 1 cửa container)",
+            "15. 装满关门照片 (Ảnh đóng toàn bộ cửa container)",
             "16. 车牌号照片 (Ảnh biển số xe)",
             "17. 装箱单照片 (Ảnh danh mục xuất hàng)",
             "18. 封号照片 (Ảnh số chì niêm phong)"
         ];
 
+        // Lấy ID báo cáo từ URL (ví dụ: /view.html?id=123)
         const urlParams = new URLSearchParams(window.location.search);
         const reportId = urlParams.get('id');
 
-        if (reportId) {
-            fetch(`/api/reports/${reportId}`)
-                .then(res => res.json())
-                .then(report => {
-                    if (report.data) {
-                        document.getElementById('val-factory').innerText = report.data.factory || '';
-                        document.getElementById('val-po').innerText = report.data.po || '';
-                        document.getElementById('val-total-pallet').innerText = report.data.total_pallet || 'N/A';
-                        document.getElementById('val-inspector').innerText = report.data.inspector_id || '';
-                        document.getElementById('val-eval').innerText = report.data.evaluation || '合格';
-                        document.getElementById('val-note').innerText = report.data.note || 'Không có ghi chú';
-                        document.getElementById('val-date').innerText = new Date(report.createdAt).toLocaleString();
-                    }
-
-                    const tableGrid = document.getElementById('photo-table-grid');
-                    tableGrid.innerHTML = '';
-
-                    for (let row = 0; row < 6; row++) {
-                        const tr = document.createElement('tr');
-                        for (let col = 0; col < 3; col++) {
-                            const index = row * 3 + col;
-                            const file = report.files && report.files[index];
-                            
-                            const td = document.createElement('td');
-                            td.style.width = '33.33%';
-                            
-                            let htmlContent = `<div class="photo-label">${titles[index] || `Ảnh ${index + 1}`}</div>`;
-                            if (file) {
-                                htmlContent += `<img src="/uploads/${file.filename}" alt="Ảnh ${index + 1}">`;
-                            } else {
-                                htmlContent += `<div style="height: 100px; line-height: 100px; text-align: center; color: #888; font-style: italic; background: #fafafa; border: 1px dashed #ccc;">Chưa có ảnh</div>`;
-                            }
-                            td.innerHTML = htmlContent;
-                            tr.appendChild(td);
-                        }
-                        tableGrid.appendChild(tr);
-                    }
-                })
-                .catch(err => {
-                    alert('Không thể tải dữ liệu báo cáo chi tiết!');
-                });
+        if (!reportId) {
+            alert('Không tìm thấy mã báo cáo!');
+            window.location.href = '/';
         }
+
+        // Gọi API lấy dữ liệu chi tiết báo cáo
+        fetch(`/api/reports/${reportId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('Lỗi tải dữ liệu báo cáo: ' + data.message);
+                    return;
+                }
+                const report = data.report;
+
+                // 1. Hiển thị thông tin chung
+                document.getElementById('generalInfo').innerHTML = `
+                    <div class="info-item"><span>厂区 / Xưởng:</span> ${report.factory || ''}</div>
+                    <div class="info-item"><span>发货PO / Mã PO:</span> ${report.po || ''}</div>
+                    <div class="info-item"><span>总托数 / Tổng số pallet:</span> ${report.total_pallet || ''}</div>
+                    <div class="info-item"><span>监仓员 / Nhân viên kiểm tra:</span> ${report.inspector_id || ''}</div>
+                    <div class="info-item" style="grid-column: span 2;"><span>时间 / Thời gian tạo:</span> ${report.created_at || ''}</div>
+                `;
+
+                // 2. Hiển thị bảng ngoại quan (14 mục tương ứng dữ liệu backend)
+                const appearancePairs = [
+                    [1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14]
+                ];
+                const appearanceNames = [
+                    "Đối chiếu mã hợp đồng (合同号核对)",
+                    "Pallet mốc / hư hỏng (托盘是否发霉破损)",
+                    "Đinh lộ ra ngoài pallet (托盘是否钉子外漏)",
+                    "Trụ gỗ dưới pallet tốt (托盘底部档位木墩完好)",
+                    "Tem chống giả (防伪标是否漏贴)",
+                    "Ván đậy bị mốc (盖板是否发霉)",
+                    "Bề ngoài ẩm ướt (外观潮湿)",
+                    "Đai nhựa tốt không? (塑钢带是否完好)",
+                    "Thùng carton hở keo (纸箱开胶)",
+                    "Thùng carton rách/mốc (纸箱破损 发霉)",
+                    "Pallet có bị lệch không (整托是否移位)",
+                    "Độ ẩm ván đậy (盖板湿度)",
+                    "Đóng công dính mưa (装柜是否淋雨)",
+                    "Màng chít có vết mưa (缠绕膜是否有雨渍)"
+                ];
+
+                let appHtml = '';
+                for (let i = 0; i < appearancePairs.length; i++) {
+                    let idx1 = appearancePairs[i][0];
+                    let idx2 = appearancePairs[i][1];
+                    appHtml += `
+                        <tr>
+                            <td class="text-left">${appearanceNames[idx1-1]}</td>
+                            <td>${report[`chk_${idx1}_std`] || ''}</td>
+                            <td>${report[`chk_${idx1}_err`] || ''}</td>
+                            <td class="text-left">${appearanceNames[idx2-1]}</td>
+                            <td>${report[`chk_${idx2}_std`] || ''}</td>
+                            <td>${report[`chk_${idx2}_err`] || ''}</td>
+                        </tr>
+                    `;
+                }
+                document.getElementById('appearanceTableBody').innerHTML = appHtml;
+
+                // 3. Hiển thị bảng độ ẩm
+                document.getElementById('moistureTableBody').innerHTML = `
+                    <tr>
+                        <td class="text-left"><b>Độ ẩm ván đậy</b><br>盖板含水率(≤20)</td>
+                        <td>${report.moisture_cover_1 || ''}</td>
+                        <td>${report.moisture_cover_2 || ''}</td>
+                        <td>${report.moisture_cover_3 || ''}</td>
+                        <td>${report.moisture_cover_4 || ''}</td>
+                        <td>${report.moisture_cover_5 || ''}</td>
+                        <td>${report.moisture_cover_err || ''}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left"><b>Độ ẩm pallet</b><br>托盘含水率(≤20)</td>
+                        <td>${report.moisture_pallet_1 || ''}</td>
+                        <td>${report.moisture_pallet_2 || ''}</td>
+                        <td>${report.moisture_pallet_3 || ''}</td>
+                        <td>${report.moisture_pallet_4 || ''}</td>
+                        <td>${report.moisture_pallet_5 || ''}</td>
+                        <td>${report.moisture_pallet_err || ''}</td>
+                    </tr>
+                `;
+
+                // 4. Kết luận & Ghi chú
+                document.getElementById('conclusionInfo').innerHTML = `
+                    <div class="info-item"><span>外观判定 / Đánh giá ngoại quan:</span> <b>${report.evaluation || ''}</b></div>
+                    <div class="info-item"><span>备注 / Ghi chú:</span> ${report.note || 'Không có'}</div>
+                `;
+
+                // 5. Render 18 hình ảnh cứng trực tiếp từ đường dẫn /uploads/...
+                const gridElem = document.getElementById('photoDisplayGrid');
+                let photosHtml = '';
+                titles.forEach((title, index) => {
+                    const photoKey = `photo_${index + 1}`;
+                    const photoPath = report[photoKey]; // Đường dẫn lưu trong DB (vd: /uploads/image_xxx.jpg)
+                    
+                    photosHtml += `
+                        <div class="photo-card">
+                            <h4>${title}</h4>
+                            ${photoPath ? `<img src="${photoPath}" alt="${title}">` : `<div class="no-photo">Không có ảnh</div>`}
+                        </div>
+                    `;
+                });
+                gridElem.innerHTML = photosHtml;
+            })
+            .catch(err => {
+                alert('Không thể kết nối tới máy chủ lấy dữ liệu!');
+                console.error(err);
+            });
     </script>
 </body>
 </html>
