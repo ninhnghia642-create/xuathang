@@ -21,7 +21,6 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// Cơ chế lưu trữ dữ liệu JSON (Reports & Users)
 const dataFile = path.join(__dirname, 'data.json');
 function loadData() {
     try {
@@ -64,7 +63,7 @@ app.post('/api/users', (req, res) => {
     const { username, password, name } = req.body;
     const db = loadData();
     if (db.users.find(u => u.username === username)) {
-        return.status(400).json({ success: false, message: 'Tên đăng nhập này đã tồn tại!' });
+        return res.status(400).json({ success: false, message: 'Tên đăng nhập này đã tồn tại!' });
     }
     db.users.push({ username, password, name: name || username, role: 'staff' });
     saveData(db);
@@ -106,7 +105,7 @@ app.get('/api/reports/:id', (req, res) => {
     const db = loadData();
     const report = db.reports.find(r => r.id === reportId);
     if (!report) {
-        return.status(404).json({ success: false, message: 'Không tìm thấy báo cáo' });
+        return res.status(404).json({ success: false, message: 'Không tìm thấy báo cáo' });
     }
     res.json(report);
 });
@@ -120,7 +119,7 @@ app.get('/api/export/:id', (req, res) => {
         
         let templatePath = path.resolve(__dirname, 'template.xls.xls');
         if (!fs.existsSync(templatePath)) templatePath = path.resolve(__dirname, 'template.xls');
-        if (!fs.existsSync(templatePath)) return.status(404).send('Không tìm thấy tệp mẫu template.xls');
+        if (!fs.existsSync(templatePath)) return res.status(404).send('Không tìm thấy tệp mẫu template.xls');
 
         const workbook = XLSX.readFile(templatePath);
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
