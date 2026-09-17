@@ -8,6 +8,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Đảm bảo thư mục uploads tồn tại an toàn
 const uploadDir = path.join(__dirname, 'uploads');
@@ -23,7 +24,7 @@ const upload = multer({ storage: storage });
 
 let reports = [];
 
-// API nhận báo cáo từ mobile
+// API nhận báo cáo từ mobile (hỗ trợ lưu nhiều file ảnh)
 app.post('/api/reports', upload.any(), (req, res) => {
     try {
         const newReport = {
@@ -44,7 +45,17 @@ app.get('/api/reports', (req, res) => {
     res.json(reports);
 });
 
-// API Xuất file Excel an toàn (chỉ đọc file khi có request tải về)
+// API lấy chi tiết 1 báo cáo cho trang xem trước ảnh thực tế
+app.get('/api/reports/:id', (req, res) => {
+    const reportId = Number(req.params.id);
+    const report = reports.find(r => r.id === reportId);
+    if (!report) {
+        return res.status(404).json({ success: false, message: 'Không tìm thấy báo cáo' });
+    }
+    res.json(report);
+});
+
+// API Xuất file Excel an toàn (ghi dữ liệu text và danh sách tên ảnh vào template)
 app.get('/api/export/:id', (req, res) => {
     try {
         const reportId = Number(req.params.id);

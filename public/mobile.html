@@ -3,172 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Báo Cáo Kiểm Tra Giám Sát Kho Ván Sàn</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Biểu Mẫu Kiểm Tra QC Mobile</title>
     <style>
-        body { background-color: #f8f9fa; font-size: 14px; }
-        .form-container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .section-title { background: #e9ecef; padding: 10px; font-weight: bold; margin-top: 20px; border-left: 4px solid #0d6efd; }
-        .upload-box { border: 2px dashed #0d6efd; padding: 10px; text-align: center; border-radius: 6px; background: #fdfdfd; cursor: pointer; }
-        .preview-img { width: 100%; height: 90px; object-fit: cover; margin-top: 8px; border-radius: 4px; display: none; border: 1px solid #ddd; }
+        body { font-family: Arial, sans-serif; margin: 10px; background: #fdfdfd; color: #333; }
+        h2 { text-align: center; color: #0056b3; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .photo-section { border: 1px dashed #007bff; padding: 15px; margin-top: 20px; border-radius: 6px; background: #f0f8ff; }
+        .photo-slot { margin-bottom: 15px; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #ddd; }
+        .preview-img { max-width: 100%; height: 120px; object-fit: cover; margin-top: 8px; display: none; border-radius: 4px; border: 1px solid #ccc; }
+        button.submit-btn { width: 100%; padding: 15px; background: #007bff; color: white; border: none; font-size: 18px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 20px; }
+        button.submit-btn:hover { background: #0056b3; }
     </style>
 </head>
 <body>
-    <div class="container my-4">
-        <div class="form-container">
-            <h3 class="text-center text-primary mb-4">监装检验报告 - BÁO CÁO KIỂM TRA GIÁM SÁT KHO</h3>
-            
-            <form id="qcForm" onsubmit="submitReport(event)">
-                <!-- Thông tin cơ bản -->
-                <div class="row mb-3">
-                    <div class="col-md-6 mb-2">
-                        <label class="form-label fw-bold">厂区 / Xưởng sản xuất:</label>
-                        <input type="text" name="factory" class="form-control" required placeholder="Ví dụ: Xưởng A">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">发货PO / Mã PO xuất hàng:</label>
-                        <input type="text" name="po" class="form-control" required placeholder="HLVN56188397">
-                    </div>
-                </div>
-
-                <!-- I. Ngoại quan -->
-                <div class="section-title">I. 外观检验 / Kiểm Tra Ngoại Quan</div>
-                <div class="table-responsive">
-                    <table class="table table-bordered align-middle">
-                        <thead class="table-light text-center">
-                            <tr>
-                                <th>Hạng mục kiểm tra</th>
-                                <th>Tiêu chuẩn</th>
-                                <th>Lỗi / Không đạt</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td>1. Đố chiếu mã hợp đồng</td><td>是</td><td><input type="text" name="ext_1" class="form-control" value="无"></td></tr>
-                            <tr><td>2. Pallet mốc / hư hỏng?</td><td>否</td><td><input type="text" name="ext_2" class="form-control" value="无"></td></tr>
-                            <tr><td>3. Đinh lộ ngoài pallet?</td><td>否</td><td><input type="text" name="ext_3" class="form-control" value="无"></td></tr>
-                            <tr><td>4. Trụ gỗ pallet tốt?</td><td>是</td><td><input type="text" name="ext_4" class="form-control" value="无"></td></tr>
-                            <tr><td>5. Tem chống giả?</td><td>否</td><td><input type="text" name="ext_5" class="form-control" value="无"></td></tr>
-                            <tr><td>6. Ván đậy có mốc?</td><td>否</td><td><input type="text" name="ext_6" class="form-control" value="无"></td></tr>
-                            <tr><td>7. Bề ngoài ẩm ướt?</td><td>否</td><td><input type="text" name="ext_7" class="form-control" value="无"></td></tr>
-                            <tr><td>8. Đai nhựa tốt?</td><td>是</td><td><input type="text" name="ext_8" class="form-control" value="无"></td></tr>
-                            <tr><td>9. Thùng carton tách keo</td><td>否</td><td><input type="text" name="ext_9" class="form-control" value="无"></td></tr>
-                            <tr><td>10. Thùng carton hư hỏng / mốc</td><td>否</td><td><input type="text" name="ext_10" class="form-control" value="无"></td></tr>
-                            <tr><td>11. Pallet có bị lệch?</td><td>否</td><td><input type="text" name="ext_11" class="form-control" value="无"></td></tr>
-                            <tr><td>12. Độ ẩm ván đậy</td><td>否</td><td><input type="text" name="ext_12" class="form-control" value="无"></td></tr>
-                            <tr><td>13. Đóng công dính mưa?</td><td>否</td><td><input type="text" name="ext_13" class="form-control" value="无"></td></tr>
-                            <tr><td>14. Mạng bọc có vết nước mưa?</td><td>否</td><td><input type="text" name="ext_14" class="form-control" value="无"></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- II. Độ ẩm -->
-                <div class="section-title">II. 湿度记录 / Ghi Chép Độ Ấm</div>
-                <div class="mb-3">
-                    <label class="form-label">Nhập các giá trị độ ẩm thực tế (cách nhau dấu phẩy):</label>
-                    <textarea name="humidity_values" class="form-control" rows="3" placeholder="7.00, 14.00, 10.00, 13.00..."></textarea>
-                </div>
-
-                <!-- III. Ảnh minh chứng (Đủ 18 vị trí kèm khung hiển thị ảnh cứng preview) -->
-                <div class="section-title">III. 现场照片 / Trọn Bộ Ảnh Minh Chứng (Đủ 18 Vị Trí)</div>
-                <div class="row g-3 mb-4" id="photoContainer">
-                    <!-- Sẽ tự động render 18 ô ảnh có kèm thẻ hiển thị ảnh trực quan -->
-                </div>
-
-                <!-- IV. Đánh giá và thông tin nhân viên -->
-                <div class="section-title">IV. 判定与备注 / Đánh Giá & Ghi Chú</div>
-                <div class="row mb-3">
-                    <div class="col-md-6 mb-2">
-                        <label class="form-label fw-bold">外观判定 / Đánh giá ngoại quan:</label>
-                        <select name="evaluation" class="form-select">
-                            <option value="合格" selected>合格 (Đạt / Hợp cách)</option>
-                            <option value="不合格">不合格 (Không đạt)</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <label class="form-label fw-bold">监仓员 / Mã số nhân viên giám sát kho:</label>
-                        <input type="text" name="inspector_id" class="form-control" value="6974" required>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label fw-bold">备注 / Ghi chú:</label>
-                        <input type="text" name="note" class="form-control" placeholder="Nhập ghi chú nếu có...">
-                    </div>
-                    <div class="col-md-6 mt-2">
-                        <label class="form-label fw-bold">检验日期 / Thời gian kiểm tra:</label>
-                        <input type="date" name="inspect_date" class="form-control" id="inspectDate">
-                    </div>
-                </div>
-
-                <button type="submit" id="submitBtn" class="btn btn-success w-100 py-3 fw-bold fs-5">Gửi Báo Cáo Về Trang Chủ</button>
-            </form>
+    <h2>BIỂU MẪU KIỂM TRA QC</h2>
+    <form id="qcForm">
+        <div class="form-group">
+            <label>Xưởng (Factory):</label>
+            <input type="text" name="factory" required>
         </div>
-    </div>
+        <div class="form-group">
+            <label>Mã PO:</label>
+            <input type="text" name="po" required>
+        </div>
+        <div class="form-group">
+            <label>Mã Nhân Viên Kiểm Tra (Inspector ID):</label>
+            <input type="text" name="inspector_id" required>
+        </div>
+        <div class="form-group">
+            <label>Kết luận ngoại quan (Evaluation):</label>
+            <select name="evaluation">
+                <option value="合格">合格 (Đạt)</option>
+                <option value="不合格">不合格 (Không đạt)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Ghi chú (Note):</label>
+            <textarea name="note" rows="3"></textarea>
+        </div>
+
+        <div class="photo-section">
+            <h3>18 Ảnh Chụp Minh Họa Giám Sát</h3>
+            <div id="slots-container"></div>
+        </div>
+
+        <button type="submit" class="submit-btn">Gửi Báo Cáo</button>
+    </form>
 
     <script>
-        document.getElementById('inspectDate').valueAsDate = new Date();
-
-        const photoTitles = [
-            "1. Ảnh toàn đơn hàng", "2. Ảnh tem pallet", "3. Ảnh độ ẩm pallet", 
-            "4. Ảnh độ ẩm ván đậy", "5. Ảnh đai nhựa & màng bọc", "6. Ảnh đóng công", 
-            "7. Ảnh trời mưa/ướt", "8. Ảnh dầu hun trùng", "9. Ảnh số lô pallet", 
-            "10. Ảnh hông contener", "11. Ảnh contener rỗng", "12. Ảnh đóng 1/3 công", 
-            "13. Ảnh đóng 1/2 công", "14. Ảnh đóng 1 cửa công", "15. Ảnh đóng toàn bộ cửa",
-            "16. Ảnh biển số xe (车牌号照片)", "17. Ảnh danh mục xuất container (装箱单照片)", "18. Ảnh số chì container (封号照片)"
-        ];
-
-        const container = document.getElementById("photoContainer");
-        photoTitles.forEach((title, index) => {
-            const photoNum = index + 1;
-            container.innerHTML += `
-                <div class="col-md-4 col-6">
-                    <div class="upload-box">
-                        <p class="small fw-bold mb-1" style="font-size: 11px; height: 28px; overflow: hidden;">${title}</p>
-                        <input type="file" name="photo_${photoNum}" accept="image/*" class="form-control form-control-sm" onchange="previewImage(event, 'preview_${photoNum}')">
-                        <img id="preview_${photoNum}" class="preview-img" alt="Xem trước ảnh">
-                    </div>
-                </div>
+        const container = document.getElementById('slots-container');
+        for (let i = 1; i <= 18; i++) {
+            const slotDiv = document.createElement('div');
+            slotDiv.className = 'photo-slot';
+            slotDiv.innerHTML = `
+                <label>Ảnh vị trí ${i}:</label>
+                <input type="file" name="photo_${i}" accept="image/*" onchange="previewImage(event, ${i})">
+                <img id="preview_${i}" class="preview-img">
             `;
-        });
+            container.appendChild(slotDiv);
+        }
 
-        // Hàm hiển thị hình ảnh thu nhỏ trực quan ngay khi chọn file
-        function previewImage(event, previewId) {
-            const reader = new FileReader();
-            const preview = document.getElementById(previewId);
-            reader.onload = function() {
-                preview.src = reader.result;
-                preview.style.display = "block";
-            }
-            if(event.target.files[0]) {
-                reader.readAsDataURL(event.target.files[0]);
+        function previewImage(event, index) {
+            const file = event.target.files[0];
+            const preview = document.getElementById(`preview_${index}`);
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.src = '';
+                preview.style.display = 'none';
             }
         }
 
-        async function submitReport(e) {
+        document.getElementById('qcForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerText = "Đang gửi báo cáo...";
+            const formData = new FormData(this);
 
             try {
-                const formData = new FormData(e.target);
-                const res = await fetch('/api/reports', {
+                const response = await fetch('/api/reports', {
                     method: 'POST',
                     body: formData
                 });
-                const data = await res.json();
-                if(data.success) {
-                    alert("Gửi báo cáo thành công!");
-                    window.location.href = "/";
+                const result = await response.json();
+                if (result.success) {
+                    alert('Gửi báo cáo thành công!');
+                    window.location.reload();
                 } else {
-                    alert("Lỗi: " + data.message);
-                    btn.disabled = false;
-                    btn.innerText = "Gửi Báo Cáo Về Trang Chủ";
+                    alert('Lỗi: ' + result.message);
                 }
             } catch (err) {
-                alert("Lỗi kết nối server: " + err.message);
-                btn.disabled = false;
-                btn.innerText = "Gửi Báo Cáo Về Trang Chủ";
+                alert('Đã xảy ra lỗi kết nối tới server.');
             }
-        }
+        });
     </script>
 </body>
 </html>
