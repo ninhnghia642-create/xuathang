@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biểu Mẫu Kiểm Tra Giám Sát Kho Vận Sàn - QC Report</title>
-    <!-- Thư viện html2pdf.js để chuyển trang web thành file PDF giữ nguyên ảnh -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 10px; color: #333; }
@@ -44,7 +43,7 @@
 <body>
     <div id="loadingOverlay">
         <div class="spinner"></div>
-        <div id="loadingText">Đang tạo file PDF và đồng bộ toàn bộ báo cáo cùng hình ảnh về trang chủ... Vui lòng đợi!</div>
+        <div id="loadingText">Đang tạo file PDF và đồng bộ toàn bộ báo cáo cùng hình ảnh lên trang chủ... Vui lòng đợi!</div>
     </div>
 
     <div class="container" id="pdfContent">
@@ -252,12 +251,12 @@
             const po = document.getElementById('poInput').value.trim();
 
             if (!factory || !po) {
-                alert('Vui lòng điền đầy đủ tên Xưởng và Mã PO trước khi gửi báo cáo!');
+                alert('Vui lòng điền đầy đủ tên Xưởng và Mã PO trước khi gửi!');
                 return;
             }
 
             document.getElementById('loadingOverlay').style.display = 'flex';
-            document.getElementById('loadingText').innerText = 'Đang chuyển đổi trang thành tệp PDF chất lượng cao...';
+            document.getElementById('loadingText').innerText = 'Đang tạo tệp PDF chất lượng cao...';
 
             const element = document.getElementById('pdfContent');
             const opt = {
@@ -269,16 +268,14 @@
             };
 
             try {
-                // Tạo file PDF từ thư viện html2pdf
                 const pdfWorker = html2pdf().from(element).set(opt);
                 const pdfBlob = await pdfWorker.output('blob');
                 
-                // Tải file PDF về máy điện thoại của người dùng
+                // Tải file PDF về máy
                 pdfWorker.save();
 
-                document.getElementById('loadingText').innerText = 'Đang tải file PDF và 18 ảnh lên đám mây trang chủ...';
+                document.getElementById('loadingText').innerText = 'Đang đồng bộ file PDF và ảnh lên trang chủ...';
 
-                // Đóng gói FormData để gửi lên server
                 const form = document.getElementById('qcForm');
                 const formData = new FormData(form);
                 formData.append('pdf_report', pdfBlob, `QC_Report_${po}_${factory}.pdf`);
@@ -296,15 +293,15 @@
                 document.getElementById('loadingOverlay').style.display = 'none';
 
                 if (data.success) {
-                    alert('Đã lưu file PDF về máy và đồng bộ thành công lên trang chủ (Quản trị viên có thể xem lại)!');
+                    alert('Gửi báo cáo thành công! Quản trị viên có thể xem lại ngay trên trang chủ.');
                     window.location.reload();
                 } else {
-                    alert('Lỗi đồng bộ đám mây: ' + data.message);
+                    alert('Lỗi đồng bộ: ' + data.message);
                 }
             } catch (error) {
                 console.error(error);
                 document.getElementById('loadingOverlay').style.display = 'none';
-                alert('Có lỗi xảy ra khi tạo hoặc gửi file: ' + error.message);
+                alert('Có lỗi xảy ra: ' + error.message);
             }
         }
     </script>

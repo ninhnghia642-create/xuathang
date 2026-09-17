@@ -10,7 +10,7 @@ app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 app.use(session({
-    secret: 'qc-secret-key-safe-2026',
+    secret: 'qc-secret-key-production-2026',
     resave: false,
     saveUninitialized: true
 }));
@@ -33,7 +33,7 @@ const upload = multer({ storage: storage });
 
 let reportsDB = [];
 
-// API Đăng nhập
+// API Đăng nhập Quản trị viên
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     if (username === 'admin' && password === 'Ab@123456') {
@@ -43,7 +43,7 @@ app.post('/api/login', (req, res) => {
     res.status(401).json({ success: false, message: 'Sai tên đăng nhập hoặc mật khẩu!' });
 });
 
-// Kiểm tra đăng nhập
+// Kiểm tra trạng thái đăng nhập
 app.get('/api/check-auth', (req, res) => {
     if (req.session && req.session.isAdmin) {
         return res.json({ loggedIn: true });
@@ -81,13 +81,13 @@ app.post('/api/reports', upload.any(), (req, res) => {
         }
 
         reportsDB.unshift(reportInfo);
-        res.json({ success: true, message: 'Lưu thành công!' });
+        res.json({ success: true, message: 'Lưu báo cáo thành công!' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 });
 
-// Lấy danh sách báo cáo cho trang view.html
+// Lấy danh sách báo cáo cho trang quản trị
 app.get('/api/admin/reports', (req, res) => {
     if (!req.session || !req.session.isAdmin) {
         return res.status(401).json({ success: false, message: 'Chưa đăng nhập!' });
@@ -96,4 +96,4 @@ app.get('/api/admin/reports', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server đang chạy cổng ${PORT}`));
+app.listen(PORT, () => console.log(`Server đang chạy ổn định trên cổng ${PORT}`));

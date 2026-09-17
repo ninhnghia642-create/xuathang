@@ -6,96 +6,83 @@
     <title>Hệ Thống Quản Trị Báo Cáo QC</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 1100px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h2 { color: #004080; text-align: center; margin-bottom: 5px; }
-        .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #004080; margin-bottom: 20px; }
         
-        /* Khung đăng nhập */
-        #loginCard { max-width: 400px; margin: 50px auto; padding: 30px; background: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
-        #loginCard input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .login-box { max-width: 400px; margin: 60px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .login-box h3 { text-align: center; color: #004080; margin-top: 0; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; background: #004080; color: white; border: none; font-size: 15px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background: #002b5c; }
         
-        .admin-section { margin-bottom: 25px; padding: 18px; background: #eef2f7; border-radius: 6px; border-left: 5px solid #004080; }
-        .form-inline { display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
-        .form-inline input { padding: 10px; flex: 1; min-width: 200px; border: 1px solid #ccc; border-radius: 4px; }
-        
-        .btn { padding: 10px 18px; background: #004080; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 13px; font-weight: bold; display: inline-block; }
-        .btn:hover { background: #00264d; }
-        .btn-danger { background: #dc3545; }
-        .btn-success { background: #28a745; }
-        
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 12px 10px; text-align: center; font-size: 13px; }
-        th { background-color: #004080; color: white; }
-        .hidden { display: none !important; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background: #004080; color: white; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .logout-btn { float: right; background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .view-link { color: #004080; font-weight: bold; text-decoration: none; }
+        .view-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <!-- Màn hình Đăng nhập Admin -->
-    <div id="loginCard">
-        <h2>ĐĂNG NHẬP QUẢN TRỊ VIÊN</h2>
-        <p style="font-size: 12px; color: #666;">Mặc định: admin / Ab@123456</p>
-        <form id="loginForm">
-            <input type="text" id="loginUser" placeholder="Tên đăng nhập..." required>
-            <input type="password" id="loginPass" placeholder="Mật khẩu..." required>
-            <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">Đăng Nhập</button>
+
+    <!-- Khung Đăng Nhập Quản Trị Viên -->
+    <div id="loginSection" class="login-box">
+        <h3>ĐĂNG NHẬP QUẢN TRỊ VIÊN</h3>
+        <p style="text-align: center; font-size: 12px; color: #666; margin-bottom: 20px;">Mặc định: admin / Ab@123456</p>
+        <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>Tài khoản:</label>
+                <input type="text" id="username" required value="admin">
+            </div>
+            <div class="form-group">
+                <label>Mật khẩu:</label>
+                <input type="password" id="password" required value="Ab@123456">
+            </div>
+            <button type="submit" class="btn">Đăng Nhập</button>
         </form>
     </div>
 
-    <!-- Giao diện Quản trị chính (Ẩn khi chưa đăng nhập) -->
-    <div id="adminDashboard" class="container hidden">
-        <div class="top-bar">
-            <div>
-                <h2 style="text-align: left; margin: 0;">QUẢN TRỊ HỆ THỐNG BÁO CÁO QC</h2>
-                <span style="color: #28a745; font-weight: bold; font-size: 13px;">● Đã đăng nhập quyền Admin</span>
-            </div>
-            <button onclick="logout()" class="btn btn-danger">🚪 Đăng Xuất</button>
-        </div>
+    <!-- Bảng Quản Lý Danh Sách Báo Cáo (Ẩn khi chưa đăng nhập) -->
+    <div id="dashboardSection" class="container" style="display: none;">
+        <button class="logout-btn" onclick="handleLogout()">Đăng Xuất</button>
+        <h2>HỆ THỐNG QUẢN LÝ BÁO CÁO GIÁM SÁT KHO VẬN SÀN</h2>
+        <p>Danh sách các tệp PDF báo cáo kèm hình ảnh thực tế được gửi từ bộ phận kiểm tra:</p>
         
-        <div class="admin-section">
-            <h3>👤 Tạo tài khoản nhân viên kiểm tra mới</h3>
-            <form id="createAccountForm" class="form-inline">
-                <input type="text" id="newUsername" placeholder="Tên đăng nhập nhân viên..." required>
-                <input type="password" id="newPassword" placeholder="Mật khẩu..." required>
-                <button type="submit" class="btn btn-success">➕ Tạo Tài Khoản</button>
-            </form>
-        </div>
-
-        <h3>📋 Danh Sách Báo Cáo Gửi Từ Nhân Viên</h3>
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>Thời gian nộp</th>
                     <th>Xưởng (Factory)</th>
                     <th>Mã PO</th>
-                    <th>Nhân Viên</th>
-                    <th>Kết Luận</th>
-                    <th>Thời Gian Gửi</th>
-                    <th>Thao Tác</th>
+                    <th>Mã Nhân Viên</th>
+                    <th>Tệp Báo Cáo PDF</th>
                 </tr>
             </thead>
             <tbody id="reportTableBody">
-                <tr><td colspan="7">Đang tải dữ liệu...</td></tr>
+                <tr><td colspan="5">Đang tải dữ liệu...</td></tr>
             </tbody>
         </table>
     </div>
 
     <script>
-        // Kiểm tra trạng thái đăng nhập khi load trang
-        fetch('/api/admin/check')
-            .then(res => res.json())
-            .then(data => {
-                if (data.isAdmin) {
-                    showDashboard();
-                }
-            });
+        // Kiểm tra phiên đăng nhập ngay khi mở trang
+        fetch('/api/check-auth')
+        .then(res => res.json())
+        .then(data => {
+            if (data.loggedIn) {
+                showDashboard();
+            }
+        });
 
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        function handleLogin(e) {
             e.preventDefault();
-            const username = document.getElementById('loginUser').value;
-            const password = document.getElementById('loginPass').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
 
-            fetch('/api/admin/login', {
+            fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -107,81 +94,47 @@
                 } else {
                     alert(data.message);
                 }
-            });
-        });
-
-        function logout() {
-            fetch('/api/admin/post', { method: 'POST' }).finally(() => {
-                window.location.reload();
-            });
+            })
+            .catch(() => alert('Lỗi kết nối đến máy chủ!'));
         }
 
         function showDashboard() {
-            document.getElementById('loginCard').classList.add('hidden');
-            document.getElementById('adminDashboard').classList.remove('hidden');
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('dashboardSection').style.display = 'block';
             loadReports();
         }
 
         function loadReports() {
-            fetch('/api/reports')
-                .then(res => res.json())
-                .then(reports => {
-                    const tbody = document.getElementById('reportTableBody');
-                    tbody.innerHTML = '';
-                    if (!reports || reports.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="7" style="color: #777;">Chưa có báo cáo nào được gửi.</td></tr>`;
-                        return;
-                    }
-                    reports.forEach(r => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${r._id.slice(-6)}</td>
-                            <td><b>${r.data?.factory || '---'}</b></td>
-                            <td>${r.data?.po || '---'}</td>
-                            <td>${r.data?.inspector_id || '---'}</td>
-                            <td>${r.data?.evaluation || '合格'}</td>
-                            <td>${new Date(r.createdAt).toLocaleString()}</td>
-                            <td>
-                                <a href="/view.html?id=${r._id}" class="btn" target="_blank" style="padding: 5px 10px; font-size: 11px;">👁️ Xem / In</a>
-                                <button onclick="deleteReport('${r._id}')" class="btn btn-danger" style="padding: 5px 10px; font-size: 11px;">🗑️ Xóa</button>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                });
-        }
-
-        function deleteReport(id) {
-            if (confirm('Bạn có chắc chắn muốn xóa báo cáo này?')) {
-                fetch(`/api/reports/${id}`, { method: 'DELETE' })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) { alert('Đã xóa!'); loadReports(); }
-                        else { alert('Xóa thất bại!'); }
-                    });
-            }
-        }
-
-        document.getElementById('createAccountForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const username = document.getElementById('newUsername').value;
-            const password = document.getElementById('newPassword').value;
-
-            fetch('/api/users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            })
+            fetch('/api/admin/reports')
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    alert('Tạo tài khoản thành công!');
-                    document.getElementById('createAccountForm').reset();
-                } else {
-                    alert(data.message);
+                    const tbody = document.getElementById('reportTableBody');
+                    tbody.innerHTML = '';
+                    if (data.reports.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5">Chưa có báo cáo nào được gửi lên hệ thống.</td></tr>';
+                        return;
+                    }
+                    data.reports.forEach(r => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${r.time}</td>
+                            <td><b>${r.factory}</b></td>
+                            <td><b>${r.po}</b></td>
+                            <td>${r.inspector}</td>
+                            <td>${r.pdfFile ? `<a href="${r.pdfFile}" class="view-link" target="_blank">📥 Tải/Xem File PDF</a>` : 'Không có file'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
                 }
             });
-        });
+        }
+
+        function handleLogout() {
+            fetch('/api/logout', { method: 'POST' }).finally(() => {
+                window.location.reload();
+            });
+        }
     </script>
 </body>
 </html>
