@@ -17,7 +17,7 @@
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; }
         input[type="text"], select, textarea { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
         
-        /* Bảng kiểm tra ngoại quan & độ ẩm style Excel */
+        /* Bảng phong cách Excel */
         .excel-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; font-size: 12px; }
         .excel-table th, .excel-table td { border: 1px solid #bbb; padding: 6px; text-align: center; vertical-align: middle; }
         .excel-table th { background-color: #f2f2f2; color: #000; font-weight: bold; }
@@ -35,9 +35,20 @@
 
         .row-flex { display: flex; gap: 15px; }
         .row-flex .form-group { flex: 1; }
+
+        /* Hiệu ứng loading khi gửi 4G */
+        #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 18px; font-weight: bold; flex-direction: column; }
+        .spinner { border: 5px solid #f3f3f3; border-top: 5px solid #28a745; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
+    <!-- Màn hình chờ khi đang nén và gửi báo cáo qua 4G -->
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div>Đang tối ưu ảnh và gửi báo cáo qua mạng... Vui lòng đợi!</div>
+    </div>
+
     <div class="container">
         <h2>监装检验报告</h2>
         <div class="subtitle">BÁO CÁO KIỂM TRA GIÁM SÁT KHO VẬN SÀN (QC INSPECTION REPORT)</div>
@@ -135,7 +146,7 @@
                 </tr>
             </table>
 
-            <!-- Bảng kiểm tra độ ẩm (Ván đậy & Pallet) -->
+            <!-- Bảng kiểm tra độ ẩm -->
             <div class="section-title">盖板含水率 & 托盘含水率 - Kiểm Tra Độ Ẩm (Ván đậy & Pallet)</div>
             <table class="excel-table">
                 <tr>
@@ -183,10 +194,10 @@
                 </div>
             </div>
 
-            <!-- 18 vị trí ảnh chụp -->
+            <!-- 18 vị trí ảnh chụp (Cho phép chọn từ thư viện hoặc chụp mới, không ép capture) -->
             <div class="section-title">18 现场照片记录 - 18 Vị Trí Ảnh Chụp Minh Họa Giám Sát</div>
             <div class="photo-grid" id="photoGridContainer">
-                <!-- Javascript sinh đủ 18 ô ảnh khớp chuẩn template và có xem trước thumbnail -->
+                <!-- Javascript sinh đủ 18 ô ảnh -->
             </div>
 
             <button type="submit" class="btn-submit">🚀 Gửi Báo Cáo Kiểm Tra Ngay</button>
@@ -195,25 +206,15 @@
 
     <script>
         const titles = [
-            "1. 整柜照片 (Ảnh toàn bộ container)",
-            "2. 托盘标照片 (Ảnh tem pallet)",
-            "3. 托盘含水率照片 (Ảnh độ ẩm pallet)",
-            "4. 盖板（含水率） (Ảnh độ ẩm ván đậy)",
-            "5. 塑钢带 缠绕膜 (Ảnh dây nhựa và màng bọc)",
-            "6. 装车照片 (Ảnh đóng công / xe)",
-            "7. 是否淋雨 (Ảnh trời mưa / ẩm ướt)",
-            "8. 熏蒸章图片 (Ảnh dấu hun trùng)",
-            "9. 批次照片-1 (Ảnh số lô pallet)",
-            "10. 集装箱内部侧面照片 (Ảnh sườn container)",
-            "11. 空箱照片 (Ảnh container rỗng)",
-            "12. 装满三分之一照片 (Ảnh đóng 1/3 container)",
-            "13. 装满二分之一照片 (Ảnh đóng 1/2 container)",
-            "14. 装满关一个门照片 (Ảnh đóng 1 cửa container)",
-            "15. 装满关门照片 (Ảnh đóng toàn bộ cửa container)",
-            "16. 车牌号照片 (Ảnh biển số xe)",
-            "17. 装箱单照片 (Ảnh danh mục xuất hàng)",
-            "18. 封号照片 (Ảnh số chì niêm phong)"
+            "1. 整柜照片 (Ảnh toàn bộ container)", "2. 托盘标照片 (Ảnh tem pallet)", "3. 托盘含水率照片 (Ảnh độ ẩm pallet)",
+            "4. 盖板（含水率） (Ảnh độ ẩm ván đậy)", "5. 塑钢带 缠绕膜 (Ảnh dây nhựa và màng bọc)", "6. 装车照片 (Ảnh đóng công / xe)",
+            "7. 是否淋雨 (Ảnh trời mưa / ẩm ướt)", "8. 熏蒸章图片 (Ảnh dấu hun trùng)", "9. 批次照片-1 (Ảnh số lô pallet)",
+            "10. 集装箱内部侧面照片 (Ảnh sườn container)", "11. 空箱照片 (Ảnh container rỗng)", "12. 装满三分之一照片 (Ảnh đóng 1/3 container)",
+            "13. 装满二分之一照片 (Ảnh đóng 1/2 container)", "14. 装满关一个门照片 (Ảnh đóng 1 cửa container)", "15. 装满关门照片 (Ảnh đóng toàn bộ cửa container)",
+            "16. 车牌号照片 (Ảnh biển số xe)", "17. 装箱单照片 (Ảnh danh mục xuất hàng)", "18. 封号照片 (Ảnh số chì niêm phong)"
         ];
+
+        const compressedFiles = {}; // Lưu trữ file đã được nén cho từng ô
 
         const gridContainer = document.getElementById('photoGridContainer');
         titles.forEach((title, index) => {
@@ -221,26 +222,72 @@
             div.className = 'photo-box';
             div.innerHTML = `
                 <label>${title}</label>
-                <input type="file" name="photo_${index + 1}" accept="image/*" capture="environment" onchange="previewImage(event, ${index + 1})">
+                <input type="file" id="file_${index + 1}" accept="image/*" onchange="compressAndPreview(event, ${index + 1})">
                 <div id="preview_${index + 1}" style="margin-top: 8px;"></div>
             `;
             gridContainer.appendChild(div);
         });
 
-        function previewImage(event, id) {
+        // Hàm nén ảnh tự động trên trình duyệt điện thoại (giảm dung lượng, chống nghẽn mạng 4G)
+        function compressAndPreview(event, id) {
+            const file = event.target.files[0];
+            if (!file) return;
+
             const reader = new FileReader();
-            reader.onload = function(){
-                const output = document.getElementById(`preview_${id}`);
-                output.innerHTML = `<img src="${reader.result}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;">`;
-            };
-            if (event.target.files[0]) {
-                reader.readAsDataURL(event.target.files[0]);
+            reader.readAsDataURL(file);
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1024; // Giới hạn chiều rộng tối đa
+                    const MAX_HEIGHT = 1024; // Giới hạn chiều cao tối đa
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Chuyển ảnh sang định dạng JPEG với chất lượng 0.75 (nén nhẹ nhưng cực nét)
+                    canvas.toBlob(function(blob) {
+                        const compressedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        });
+                        compressedFiles[id] = compressedFile;
+
+                        // Hiển thị ảnh thu nhỏ (thumbnail)
+                        const output = document.getElementById(`preview_${id}`);
+                        output.innerHTML = `<img src="${canvas.toDataURL('image/jpeg', 0.75)}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;">`;
+                    }, 'image/jpeg', 0.75);
+                }
             }
         }
 
         document.getElementById('qcForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            document.getElementById('loadingOverlay').style.display = 'flex';
+
             const formData = new FormData(this);
+
+            // Đưa các file đã nén vào formData để gửi lên server
+            for (let id in compressedFiles) {
+                formData.set(`photo_${id}`, compressedFiles[id]);
+            }
             
             fetch('/api/reports', {
                 method: 'POST',
@@ -248,6 +295,7 @@
             })
             .then(res => res.json())
             .then(data => {
+                document.getElementById('loadingOverlay').style.display = 'none';
                 if (data.success) {
                     alert('Gửi báo cáo thành công!');
                     window.location.reload();
@@ -256,7 +304,8 @@
                 }
             })
             .catch(err => {
-                alert('Có lỗi xảy ra khi kết nối tới máy chủ!');
+                document.getElementById('loadingOverlay').style.display = 'none';
+                alert('Có lỗi kết nối mạng 4G! Vui lòng kiểm tra lại sóng hoặc thử lại.');
             });
         });
     </script>
