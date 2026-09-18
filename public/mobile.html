@@ -317,5 +317,42 @@
             }
         }
     </script>
+    <script>
+  // Hàm tự động gọi API lấy dữ liệu báo cáo từ Google Sheets
+  async function loadReports() {
+    try {
+      const response = await fetch('/api/reports');
+      const result = await response.json();
+
+      if (result.success && Array.isArray(result.data)) {
+        const tableBody = document.getElementById('reportTableBody');
+        if (!tableBody) return;
+
+        tableBody.innerHTML = ''; // Làm sạch bảng trước khi render
+
+        result.data.forEach(item => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${item['Thời gian nộp'] || ''}</td>
+            <td>${item['Xưởng'] || ''}</td>
+            <td>${item['Mã PO'] || ''}</td>
+            <td>${item['Mã Nhân Viên'] || ''}</td>
+            <td>
+              ${item['Đường dẫn File PDF'] 
+                ? `<a href="${item['Đường dẫn File PDF']}" target="_blank" style="color: #2563eb; text-decoration: underline;">Xem PDF</a>` 
+                : 'Chưa có file'}
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+    } catch (error) {
+      console.error('Lỗi khi nạp dữ liệu báo cáo:', error);
+    }
+  }
+
+  // Chạy hàm khi trang web hoàn tất tải nội dung
+  document.addEventListener('DOMContentLoaded', loadReports);
+</script>
 </body>
 </html>
