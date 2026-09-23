@@ -87,13 +87,32 @@ app.post('/api/reports', upload.any(), (req, res) => {
     }
 });
 
-// Lấy danh sách báo cáo cho trang quản trị
-app.get('/api/admin/reports', (req, res) => {
-    if (!req.session || !req.session.isAdmin) {
-        return res.status(401).json({ success: false, message: 'Chưa đăng nhập!' });
-    }
-    res.json({ success: true, reports: reportsDB });
-});
+// Route lấy danh sách báo cáo hiển thị lên trang chủ
+app.get('/api/reports', async (req, res) => {
+  try {
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+    
+    // Đọc toàn bộ dữ liệu từ Google Sheets
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'Trang tinh1!A2:E', // Bỏ qua hàng tiêu đề Dòng 1
+    });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server đang chạy ổn định trên cổng ${PORT}`));
+    const rows = response.data.values || [];
+
+    // Chuyển đổi dữ liệu từ Google Sheets thành danh sách JSON
+    const reportList = rows.map(row => ({
+      submittedAt: row[0] || '', // Thời gian nộp
+      factory: row[1] || '',     // Xưởng
+      poNumber: row[2] || '',    // Mã PO
+      employeeId: row[3] || '',  // Mã nhân viên
+      pdfUrl: row[4] || ''       // Link PDF trên Google Drive
+    }));
+
+    // Trả về cho giao diện trang chủ hiển thị
+    res.json({ success: true, data: reportList });
+  } catch (error) {
+    console.error('Lỗi tải danh sách báo cáo:', error);
+    res.status(500).json({ success: false, data: [] });
+  }
+});
