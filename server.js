@@ -42,6 +42,22 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+// Hàm tự động trích xuất ID chuẩn từ URL hoặc chuỗi nhập vào
+function extractGoogleId(input) {
+    if (!input) return '';
+    let str = input.trim().replace(/^"(.*)"$/, '$1').trim();
+    
+    // Nếu dán nhầm URL Google Sheet / Doc
+    const sheetMatch = str.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (sheetMatch) return sheetMatch[1];
+    
+    // Nếu dán nhầm URL Google Drive Folder
+    const folderMatch = str.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+    if (folderMatch) return folderMatch[1];
+
+    return str;
+}
+
 // Khởi tạo kết nối Google Sheets & Google Drive API
 let sheets, drive;
 try {
@@ -78,8 +94,9 @@ try {
 async function uploadFileToDrive(file) {
     if (!drive) throw new Error('Google Drive API chưa sẵn sàng. Kiểm tra lại thông tin xác thực Google!');
 
-    // Lấy ID thư mục (hỗ trợ cả 2 kiểu đặt tên biến)
-    const folderId = (process.env.GOOGLE_DRIVE_FOLDER_ID || process.env.DRIVE_FOLDER_ID || '').trim();
+    // Tự động lấy và làm sạch Folder ID
+    const rawFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || process.env.DRIVE_FOLDER_ID || '';
+    const folderId = extractGoogleId(rawFolderId);
     
     if (!folderId) {
         throw new Error('Chưa cấu hình GOOGLE_DRIVE_FOLDER_ID trong biến môi trường Render!');
@@ -87,7 +104,7 @@ async function uploadFileToDrive(file) {
 
     const fileMetadata = {
         name: `${Date.now()}_${file.originalname}`,
-        parents: [folderId] // Bắt buộc phải đẩy vào Folder đã chia sẻ để tránh lỗi Storage Quota
+        parents: [folderId] // Bắt buộc lưu vào Thư mục đã chia sẻ
     };
 
     const media = {
@@ -116,7 +133,7 @@ async function uploadFileToDrive(file) {
 
         return response.data.webViewLink || `https://drive.google.com/file/d/${fileId}/view`;
     } finally {
-        // Đảm bảo luôn xóa file tạm trên bộ nhớ Render ngay sau khi upload xong (dù thành công hay thất bại)
+        // Đảm bảo luôn xóa file tạm trên Render
         if (fs.existsSync(file.path)) {
             try { fs.unlinkSync(file.path); } catch (e) {}
         }
@@ -172,8 +189,9 @@ app.post('/api/reports', upload.any(), async (req, res) => {
             });
         }
 
-        // Lấy ID Google Sheets (hỗ trợ cả 2 kiểu đặt tên biến)
-        const sheetId = (process.env.GOOGLE_SHEET_ID || process.env.SPREADSHEET_ID || '').trim();
+        // Tự động lấy và làm sạch Sheet ID
+        const rawSheetId = process.env.GOOGLE_SHEET_ID || process.env.SPREADSHEET_ID || '';
+        const sheetId = extractGoogleId(rawSheetId);
 
         // 2. Tự động ghi 1 dòng mới vào Google Sheets
         if (sheets && sheetId) {
@@ -187,7 +205,7 @@ app.post('/api/reports', upload.any(), async (req, res) => {
             });
             console.log('✅ Báo cáo mới đã được ghi tự động vào Google Sheets');
         } else {
-            console.warn('⚠️ Không thể ghi dữ liệu: Thiếu GOOGLE_SHEET_ID/SPREADSHEET_ID hoặc kết nối Google Sheets thất bại');
+            console.warn('⚠️ Không thể ghi dữ liệu: Thiếu GOOGLE_SHEET_ID hoặc kết nối Google Sheets thất bại');
         }
 
         return res.json({ 
@@ -204,7 +222,8 @@ app.post('/api/reports', upload.any(), async (req, res) => {
 // Lấy danh sách báo cáo trực tiếp từ Google Sheets hiển thị lên Trang chủ
 app.get('/api/reports', async (req, res) => {
     try {
-        const sheetId = (process.env.GOOGLE_SHEET_ID || process.env.SPREADSHEET_ID || '').trim();
+        const rawSheetId = process.env.GOOGLE_SHEET_ID || process.env.SPREADSHEET_ID || '';
+        const sheetId = extractGoogleId(rawSheetId);
 
         if (!sheets || !sheetId) {
             return res.json({ success: true, data: [] });
