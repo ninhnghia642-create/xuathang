@@ -1,259 +1,244 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
-const session = require('express-session');
-const fs = require('fs');
 const { google } = require('googleapis');
+const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Bắt các lỗi ngầm để tránh sập máy chủ trên Render
-process.on('uncaughtException', (err) => {
-    console.error('❌ LỖI UNCAUGHT EXCEPTION:', err);
-});
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('❌ LỖI UNHANDLED REJECTION:', reason);
-});
+// Cấu hình Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ limit: '100mb', extended: true }));
-
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'qc-secret-key-production-2026',
-    resave: false,
-    saveUninitialized: true
-}));
-
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Tạo thư mục tạm uploads nếu chưa tồn tại
-const uploadDir = path.join(__dirname, 'uploads');
+// Thư mục lưu tệp cục bộ làm phương án dự phòng (Fallback)
+const uploadDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
+app.use('/uploads', express.static(uploadDir));
+app.use(express.static(path.join(__dirname, 'public')));
 
+// Cấu hình lưu trữ tạm trong bộ nhớ Server (Lưu báo cáo trong 24 giờ)
+let inMemoryReports = [];
+
+// Hàm dọn dẹp báo cáo trong bộ nhớ cũ hơn 24 giờ
+function cleanOldMemoryReports() {
+    const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
+    inMemoryReports = inMemoryReports.filter(report => report.timestamp > twentyFourHoursAgo);
+}
+setInterval(cleanOldMemoryReports, 60 * 60 * 1000); // Chạy mỗi giờ 1 lần
+
+// Cấu hình Multer lưu tệp tạm
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + '-' + file.originalname);
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `${uniqueSuffix}_${file.originalname.replace(/\s+/g, '_')}`);
     }
 });
 const upload = multer({ storage: storage });
 
-// Hàm tự động trích xuất ID chuẩn từ URL hoặc chuỗi nhập vào
+// Khởi tạo Google Auth & APIs
+let drive = null;
+let sheets = null;
+
+function initGoogleApis() {
+    try {
+        const privateKey = process.env.GOOGLE_PRIVATE_KEY
+            ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
+            : null;
+        const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+
+        if (privateKey && clientEmail) {
+            const auth = new google.auth.JWT(
+                clientEmail,
+                null,
+                privateKey,
+                [
+                    'https://www.googleapis.com/auth/drive',
+                    'https://www.googleapis.com/auth/spreadsheets'
+                ]
+            );
+
+            drive = google.drive({ version: 'v3', auth });
+            sheets = google.sheets({ version: 'v4', auth });
+            console.log('✅ Đã kết nối Google Service Account thành công!');
+        } else {
+            console.warn('⚠️ Thiếu cấu hình GOOGLE_PRIVATE_KEY hoặc GOOGLE_SERVICE_ACCOUNT_EMAIL. Sử dụng chế độ lưu cục bộ.');
+        }
+    } catch (err) {
+        console.error('❌ Lỗi khởi tạo Google API:', err.message);
+    }
+}
+initGoogleApis();
+
+// Hàm trích xuất ID từ URL hoặc chuỗi ID
 function extractGoogleId(input) {
     if (!input) return '';
-    let str = input.trim().replace(/^"(.*)"$/, '$1').trim();
-    
-    // Nếu dán nhầm URL Google Sheet / Doc
-    const sheetMatch = str.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    if (sheetMatch) return sheetMatch[1];
-    
-    // Nếu dán nhầm URL Google Drive Folder
-    const folderMatch = str.match(/\/folders\/([a-zA-Z0-9_-]+)/);
-    if (folderMatch) return folderMatch[1];
-
-    return str;
+    const match = input.match(/[-\w]{25,}/);
+    return match ? match[0] : input.trim();
 }
 
-// Khởi tạo kết nối Google Sheets & Google Drive API
-let sheets, drive;
-try {
-    let privateKey = process.env.GOOGLE_PRIVATE_KEY;
-    if (privateKey) {
-        privateKey = privateKey.replace(/\\n/g, '\n').replace(/^"(.*)"$/, '$1').trim();
-    }
-
-    const clientEmail = (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '').trim();
-
-    if (clientEmail && privateKey) {
-        const auth = new google.auth.GoogleAuth({
-            credentials: {
-                client_email: clientEmail,
-                private_key: privateKey,
-            },
-            scopes: [
-                'https://www.googleapis.com/auth/spreadsheets',
-                'https://www.googleapis.com/auth/drive'
-            ],
-        });
-
-        sheets = google.sheets({ version: 'v4', auth });
-        drive = google.drive({ version: 'v3', auth });
-        console.log('✅ Khởi tạo Google Sheets & Drive API thành công!');
-    } else {
-        console.warn('⚠️ CẢNH BÁO: Thiếu GOOGLE_SERVICE_ACCOUNT_EMAIL hoặc GOOGLE_PRIVATE_KEY trong Environment Variables!');
-    }
-} catch (err) {
-    console.error('❌ Lỗi kết nối Google API:', err.message);
-}
-
-// Hàm đẩy File báo cáo PDF lên Google Drive và lấy Link công khai
-async function uploadFileToDrive(file) {
-    if (!drive) throw new Error('Google Drive API chưa sẵn sàng. Kiểm tra lại thông tin xác thực Google!');
-
-    // Tự động lấy và làm sạch Folder ID
-    const rawFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || process.env.DRIVE_FOLDER_ID || '';
-    const folderId = extractGoogleId(rawFolderId);
-    
-    if (!folderId) {
-        throw new Error('Chưa cấu hình GOOGLE_DRIVE_FOLDER_ID trong biến môi trường Render!');
-    }
-
-    const fileMetadata = {
-        name: `${Date.now()}_${file.originalname}`,
-        parents: [folderId] // Bắt buộc lưu vào Thư mục đã chia sẻ
-    };
-
-    const media = {
-        mimeType: file.mimetype,
-        body: fs.createReadStream(file.path)
-    };
-
-    try {
-        const response = await drive.files.create({
-            requestBody: fileMetadata,
-            media: media,
-            fields: 'id, webViewLink'
-        });
-
-        const fileId = response.data.id;
-
-        // Phân quyền cho phép người có link được xem file PDF
-        try {
-            await drive.permissions.create({
-                fileId: fileId,
-                requestBody: { role: 'reader', type: 'anyone' }
-            });
-        } catch (pErr) {
-            console.warn('⚠️ Lỗi phân quyền xem file Drive:', pErr.message);
-        }
-
-        return response.data.webViewLink || `https://drive.google.com/file/d/${fileId}/view`;
-    } finally {
-        // Đảm bảo luôn xóa file tạm trên Render
-        if (fs.existsSync(file.path)) {
-            try { fs.unlinkSync(file.path); } catch (e) {}
-        }
-    }
-}
-
-// API Đăng nhập Quản trị viên
-app.post('/api/login', (req, res) => {
-    const { username, password } = req.body;
-    if (username === 'admin' && password === 'Ab@123456') {
-        req.session.isAdmin = true;
-        return res.json({ success: true, message: 'Đăng nhập thành công!' });
-    }
-    res.status(401).json({ success: false, message: 'Sai tên đăng nhập hoặc mật khẩu!' });
-});
-
-// Kiểm tra trạng thái đăng nhập
-app.get('/api/check-auth', (req, res) => {
-    if (req.session && req.session.isAdmin) {
-        return res.json({ loggedIn: true });
-    }
-    res.json({ loggedIn: false });
-});
-
-// Đăng xuất
-app.post('/api/logout', (req, res) => {
-    req.session.destroy();
-    res.json({ success: true });
-});
-
-// Nhận báo cáo từ mobile.html -> Đẩy lên Google Drive & Google Sheets
-app.post('/api/reports', upload.any(), async (req, res) => {
-    try {
-        const factory = req.body.factory || 'Chưa rõ';
-        const po = req.body.po || req.body.poNumber || 'Chưa có PO';
-        const inspector = req.body.inspector_id || req.body.employeeId || 'N/A';
-        const currentTime = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-
-        let pdfDriveUrl = '';
-
-        // 1. Kiểm tra và tải tệp PDF lên Google Drive
-        if (req.files && req.files.length > 0) {
-            const pdfFile = req.files.find(f => f.fieldname === 'pdf_report' || f.mimetype === 'application/pdf') || req.files[0];
-            if (pdfFile) {
-                pdfDriveUrl = await uploadFileToDrive(pdfFile);
-            }
-
-            // Dọn dẹp các tệp tạm dư thừa khác nếu có
-            req.files.forEach(f => {
-                if (fs.existsSync(f.path)) {
-                    try { fs.unlinkSync(f.path); } catch (e) {}
-                }
-            });
-        }
-
-        // Tự động lấy và làm sạch Sheet ID
-        const rawSheetId = process.env.GOOGLE_SHEET_ID || process.env.SPREADSHEET_ID || '';
-        const sheetId = extractGoogleId(rawSheetId);
-
-        // 2. Tự động ghi 1 dòng mới vào Google Sheets
-        if (sheets && sheetId) {
-            await sheets.spreadsheets.values.append({
-                spreadsheetId: sheetId,
-                range: 'A:E',
-                valueInputOption: 'USER_ENTERED',
-                requestBody: {
-                    values: [[currentTime, factory, po, inspector, pdfDriveUrl]]
-                }
-            });
-            console.log('✅ Báo cáo mới đã được ghi tự động vào Google Sheets');
-        } else {
-            console.warn('⚠️ Không thể ghi dữ liệu: Thiếu GOOGLE_SHEET_ID hoặc kết nối Google Sheets thất bại');
-        }
-
-        return res.json({ 
-            success: true, 
-            message: 'Đã đẩy báo cáo lên Google Sheets & Drive thành công!',
-            data: { currentTime, factory, po, inspector, pdfDriveUrl }
-        });
-    } catch (error) {
-        console.error('❌ Lỗi gửi báo cáo:', error);
-        return res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// Lấy danh sách báo cáo trực tiếp từ Google Sheets hiển thị lên Trang chủ
+// ----------------------------------------------------
+// 1. API LẤY DANH SÁCH BÁO CÁO (TRANG CHỦ / VÒNG 24H)
+// ----------------------------------------------------
 app.get('/api/reports', async (req, res) => {
-    try {
-        const rawSheetId = process.env.GOOGLE_SHEET_ID || process.env.SPREADSHEET_ID || '';
-        const sheetId = extractGoogleId(rawSheetId);
+    cleanOldMemoryReports();
+    let sheetReports = [];
 
-        if (!sheets || !sheetId) {
-            return res.json({ success: true, data: [] });
+    const rawSheetId = process.env.GOOGLE_SHEET_ID || '';
+    const sheetId = extractGoogleId(rawSheetId);
+
+    // Thử lấy dữ liệu từ Google Sheets
+    if (sheets && sheetId) {
+        try {
+            const response = await sheets.spreadsheets.values.get({
+                spreadsheetId: sheetId,
+                range: 'A2:E100', // Lấy dữ liệu từ dòng 2
+            });
+
+            const rows = response.data.values || [];
+            sheetReports = rows.map(row => ({
+                time: row[0] || 'N/A',
+                factory: row[1] || 'N/A',
+                po: row[2] || 'N/A',
+                staffId: row[3] || 'N/A',
+                pdfUrl: row[4] || '#',
+                source: 'GoogleSheets'
+            }));
+        } catch (error) {
+            console.warn('⚠️ Lỗi kết nối Google Sheets (Sử dụng dữ liệu dự phòng):', error.message);
+        }
+    }
+
+    // Gộp dữ liệu Google Sheets và Dữ liệu bộ nhớ tạm 24h
+    const combinedReports = [...inMemoryReports.map(r => ({
+        time: r.time,
+        factory: r.factory,
+        po: r.po,
+        staffId: r.staffId,
+        pdfUrl: r.pdfUrl,
+        source: 'Memory'
+    })), ...sheetReports];
+
+    // Loại bỏ các báo cáo trùng lặp dựa trên mã PO + thời gian
+    const uniqueReports = Array.from(new Map(combinedReports.map(item => [item.po + item.time, item])).values());
+
+    return res.json({
+        success: true,
+        data: uniqueReports
+    });
+});
+
+// ----------------------------------------------------
+// 2. API TẢI BÁO CÁO LÊN (TỰ ĐỘNG LƯU DRIVE HOẶC CỤC BỘ)
+// ----------------------------------------------------
+app.post('/api/upload', upload.single('pdf'), async (req, res) => {
+    try {
+        const { factory, po, staffId } = req.body;
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({ success: false, message: 'Vui lòng chọn tệp PDF báo cáo!' });
         }
 
-        // Đọc dữ liệu từ Google Sheets (từ Dòng 2 trở đi)
-        const response = await sheets.spreadsheets.values.get({
-            spreadsheetId: sheetId,
-            range: 'A2:E',
+        const now = new Date();
+        const formattedTime = now.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+        
+        // Link xem PDF mặc định lưu trên Server (Khắc phục hoàn toàn lỗi Drive Quota)
+        let pdfPublicUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+
+        // Bước A: Thử tải tệp lên Google Drive
+        const rawFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
+        const folderId = extractGoogleId(rawFolderId);
+
+        if (drive && folderId) {
+            try {
+                const driveResponse = await drive.files.create({
+                    requestBody: {
+                        name: `${Date.now()}_${file.originalname}`,
+                        parents: [folderId]
+                    },
+                    media: {
+                        mimeType: file.mimetype,
+                        body: fs.createReadStream(file.path)
+                    },
+                    fields: 'id, webViewLink',
+                    supportsAllDrives: true
+                });
+
+                const fileId = driveResponse.data.id;
+                
+                // Cấp quyền công khai xem file trên Drive
+                try {
+                    await drive.permissions.create({
+                        fileId: fileId,
+                        requestBody: { role: 'reader', type: 'anyone' },
+                        supportsAllDrives: true
+                    });
+                } catch (pErr) {
+                    console.warn('⚠️ Lỗi phân quyền Drive:', pErr.message);
+                }
+
+                pdfPublicUrl = driveResponse.data.webViewLink || `https://drive.google.com/file/d/${fileId}/view`;
+                console.log('✅ Đã tải file lên Google Drive thành công:', pdfPublicUrl);
+            } catch (driveErr) {
+                console.warn('⚠️ Không thể tải lên Google Drive (Đã chuyển sang dùng link server cục bộ):', driveErr.message);
+            }
+        }
+
+        // Bước B: Thử ghi dòng thông tin vào Google Sheets
+        const rawSheetId = process.env.GOOGLE_SHEET_ID || '';
+        const sheetId = extractGoogleId(rawSheetId);
+
+        if (sheets && sheetId) {
+            try {
+                await sheets.spreadsheets.values.append({
+                    spreadsheetId: sheetId,
+                    range: 'A:E',
+                    valueInputOption: 'USER_ENTERED',
+                    requestBody: {
+                        values: [[formattedTime, factory || '', po || '', staffId || '', pdfPublicUrl]]
+                    }
+                });
+                console.log('✅ Đã ghi dữ liệu vào Google Sheets!');
+            } catch (sheetErr) {
+                console.warn('⚠️ Không thể ghi vào Google Sheets:', sheetErr.message);
+            }
+        }
+
+        // Bước C: Lưu luôn vào bộ nhớ đệm 24h trên Server
+        inMemoryReports.unshift({
+            timestamp: Date.now(),
+            time: formattedTime,
+            factory: factory || 'N/A',
+            po: po || 'N/A',
+            staffId: staffId || 'N/A',
+            pdfUrl: pdfPublicUrl
         });
 
-        const rows = response.data.values || [];
+        return res.json({
+            success: true,
+            message: 'Tải báo cáo lên hệ thống thành công!',
+            pdfUrl: pdfPublicUrl
+        });
 
-        // Chuyển đổi dòng dữ liệu Google Sheets thành dạng JSON
-        const reportList = rows.map((row) => ({
-            submittedAt: row[0] || '', // Thời gian nộp
-            factory: row[1] || '',     // Xưởng
-            poNumber: row[2] || '',    // Mã PO
-            employeeId: row[3] || '',  // Mã nhân viên
-            pdfUrl: row[4] || '',      // Link file PDF trên Google Drive
-        })).reverse(); // Hiện báo cáo mới nộp lên đầu bảng
-
-        return res.json({ success: true, data: reportList });
     } catch (error) {
-        console.error('❌ Lỗi tải danh sách báo cáo:', error.message);
-        return res.status(500).json({ success: false, data: [], message: error.message });
+        console.error('❌ Lỗi xử lý Upload:', error);
+        return res.status(500).json({ success: false, message: 'Lỗi máy chủ: ' + error.message });
     }
 });
 
-// Lắng nghe cổng kết nối của Render
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server đang lắng nghe thành công tại cổng ${PORT}`);
+// Route điều hướng tất cả yêu cầu khác về index.html
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Khởi chạy Server
+app.listen(PORT, () => {
+    console.log(`🚀 Server đang chạy tại port ${PORT}`);
 });
