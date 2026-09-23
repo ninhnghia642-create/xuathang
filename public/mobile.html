@@ -50,14 +50,18 @@
 
     <div class="container" id="pdfContent">
         <h2>监装检验报告</h2>
-        <div class="subtitle">BÁO CÁO KIỂM TRA GIÁM SÁT KHO VẬN SÀN (QC INSPECTION REPORT)</div>
+        <div class="subtitle">BÁO CÁO KIỂM TRA GIÁM SÁT XUẤT KHO VÁN SÀN (QC INSPECTION REPORT)</div>
 
         <form id="qcForm">
             <div class="row-flex">
                 <div class="form-group">
-                    <label>厂区 / Xưởng (Factory):</label>
-                    <input type="text" name="factory" id="factoryInput" required placeholder="Nhập tên xưởng...">
-                </div>
+    <label>厂区 / Xưởng (Factory):</label>
+    <select name="factory" id="factoryInput" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background-color: #fff;">
+        <option value="" disabled selected>-- Chọn nhà xưởng --</option>
+        <option value="Xưởng cũ">老厂区 / Xưởng cũ</option>
+        <option value="Xưởng mới">新厂区 / Xưởng mới</option>
+    </select>
+</div>
                 <div class="form-group">
                     <label>发货PO / Mã PO:</label>
                     <input type="text" name="po" id="poInput" required placeholder="Nhập mã PO xuất hàng...">
@@ -188,7 +192,7 @@
 
     <script>
         const titles = [
-            "1. 整柜照片 (Ảnh toàn bộ container)", "2. 托盘标照片 (Ảnh tem pallet)", "3. 托盘含水率照片 (Ảnh độ ẩm pallet)",
+            "1. 整柜照片 (Ảnh toàn bộ đơn hàng)", "2. 托盘标照片 (Ảnh tem pallet)", "3. 托盘含水率照片 (Ảnh độ ẩm pallet)",
             "4. 盖板（含水率） (Ảnh độ ẩm ván đậy)", "5. 塑钢带 缠绕膜 (Ảnh dây nhựa và màng bọc)", "6. 装车照片 (Ảnh đóng công / xe)",
             "7. 是否淋雨 (Ảnh trời mưa / ẩm ướt)", "8. 熏蒸章图片 (Ảnh dấu hun trùng)", "9. 批次照片-1 (Ảnh số lô pallet)",
             "10. 集装箱内部侧面照片 (Ảnh sườn container)", "11. 空箱照片 (Ảnh container rỗng)", "12. 装满三分之一照片 (Ảnh đóng 1/3 container)",

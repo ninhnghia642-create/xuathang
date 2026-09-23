@@ -75,7 +75,8 @@
             if (data.loggedIn) {
                 showDashboard();
             }
-        });
+        })
+        .catch(err => console.error('Lỗi kiểm tra phiên đăng nhập:', err));
 
         function handleLogin(e) {
             e.preventDefault();
@@ -105,28 +106,45 @@
         }
 
         function loadReports() {
-            fetch('/api/admin/reports')
+            const tbody = document.getElementById('reportTableBody');
+            tbody.innerHTML = '<tr><td colspan="5">Đang tải dữ liệu...</td></tr>';
+
+            // Gọi đúng API endpoint /api/reports
+            fetch('/api/reports')
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    const tbody = document.getElementById('reportTableBody');
                     tbody.innerHTML = '';
-                    if (data.reports.length === 0) {
+                    const reports = data.data || [];
+
+                    if (reports.length === 0) {
                         tbody.innerHTML = '<tr><td colspan="5">Chưa có báo cáo nào được gửi lên hệ thống.</td></tr>';
                         return;
                     }
-                    data.reports.forEach(r => {
+
+                    // Khớp đúng các thuộc tính từ server.js đọc từ Google Sheets
+                    reports.forEach(r => {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
-                            <td>${r.time}</td>
-                            <td><b>${r.factory}</b></td>
-                            <td><b>${r.po}</b></td>
-                            <td>${r.inspector}</td>
-                            <td>${r.pdfFile ? `<a href="${r.pdfFile}" class="view-link" target="_blank">📥 Tải/Xem File PDF</a>` : 'Không có file'}</td>
+                            <td>${r.submittedAt || ''}</td>
+                            <td><b>${r.factory || ''}</b></td>
+                            <td><b>${r.poNumber || ''}</b></td>
+                            <td>${r.employeeId || ''}</td>
+                            <td>
+                                ${r.pdfUrl 
+                                    ? `<a href="${r.pdfUrl}" class="view-link" target="_blank">📥 Tải/Xem File PDF</a>` 
+                                    : '<span style="color: #999;">Không có file</span>'}
+                            </td>
                         `;
                         tbody.appendChild(tr);
                     });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="5" style="color:red;">Lỗi tải dữ liệu: ${data.message || 'Không xác định'}</td></tr>`;
                 }
+            })
+            .catch(err => {
+                console.error('Lỗi tải danh sách:', err);
+                tbody.innerHTML = '<tr><td colspan="5" style="color:red;">Không thể kết nối đến máy chủ! Vui lòng bấm làm mới lại trang.</td></tr>';
             });
         }
 
