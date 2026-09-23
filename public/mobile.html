@@ -25,13 +25,12 @@
         .excel-table td.text-left { text-align: left; }
         .excel-table input, .excel-table select { width: 100%; padding: 4px; border: 1px solid #ddd; border-radius: 3px; text-align: center; font-size: 12px; }
 
-        /* Sử dụng inline-block chuẩn hóa tương thích Canvas tuyệt đối */
         .photo-grid { width: 100%; font-size: 0; margin-top: 10px; }
         .photo-box { display: inline-block; width: 48%; margin: 1%; vertical-align: top; font-size: 13px; background: #fafafa; border: 1px solid #ddd; padding: 10px; border-radius: 6px; page-break-inside: avoid; break-inside: avoid; }
         .photo-box label { display: block; font-size: 12px; color: #333; margin-bottom: 6px; font-weight: bold; }
         .photo-box input[type="file"] { font-size: 11px; width: 100%; }
 
-        .btn-submit { display: block; width: 100%; padding: 14px; background: #004080; color: white; border: none; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 25px; text-align: center; }
+        .btn-submit { display: block; width: 100%; max-width: 800px; margin: 20px auto 10px auto; padding: 14px; background: #004080; color: white; border: none; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; text-align: center; }
         .btn-submit:hover { background: #002b5c; }
 
         .row-flex { display: flex; gap: 15px; page-break-inside: avoid; break-inside: avoid; }
@@ -48,20 +47,21 @@
         <div id="loadingText">Đang xử lý xuất PDF và đồng bộ dữ liệu... Vui lòng đợi!</div>
     </div>
 
-    <div class="container" id="pdfContent">
-        <h2>监装检验报告</h2>
-        <div class="subtitle">BÁO CÁO KIỂM TRA GIÁM SÁT XUẤT KHO VÁN SÀN (QC INSPECTION REPORT)</div>
+    <form id="qcForm">
+        <!-- VÙNG XUẤT PDF (ĐÃ ĐƯỢC TÁCH NÚT BẤM RA NGOÀI) -->
+        <div class="container" id="pdfContent">
+            <h2>监装检验报告</h2>
+            <div class="subtitle">BÁO CÁO KIỂM TRA GIÁM SÁT XUẤT KHO VÁN SÀN (QC INSPECTION REPORT)</div>
 
-        <form id="qcForm">
             <div class="row-flex">
                 <div class="form-group">
-    <label>厂区 / Xưởng (Factory):</label>
-    <select name="factory" id="factoryInput" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background-color: #fff;">
-        <option value="" disabled selected>-- Chọn nhà xưởng --</option>
-        <option value="Xưởng cũ">老厂区 / Xưởng cũ</option>
-        <option value="Xưởng mới">新厂区 / Xưởng mới</option>
-    </select>
-</div>
+                    <label>厂区 / Xưởng (Factory):</label>
+                    <select name="factory" id="factoryInput" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background-color: #fff;">
+                        <option value="" disabled selected>-- Chọn nhà xưởng --</option>
+                        <option value="Xưởng cũ">老厂区 / Xưởng cũ</option>
+                        <option value="Xưởng mới">新厂区 / Xưởng mới</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>发货PO / Mã PO:</label>
                     <input type="text" name="po" id="poInput" required placeholder="Nhập mã PO xuất hàng...">
@@ -75,7 +75,7 @@
                 </div>
                 <div class="form-group">
                     <label>监仓员 / Mã Nhân Viên Kiểm Tra (Inspector ID):</label>
-                    <input type="text" name="inspector_id" required placeholder="Nhập mã nhân viên...">
+                    <input type="text" name="inspector_id" id="inspectorInput" required placeholder="Nhập mã nhân viên...">
                 </div>
             </div>
 
@@ -185,10 +185,11 @@
 
             <div class="section-title">18 现场照片记录 - 18 Vị Trí Ảnh Chụp Minh Họa Giám Sát</div>
             <div class="photo-grid" id="photoGridContainer"></div>
+        </div>
 
-            <button type="button" class="btn-submit" onclick="generatePDFAndUpload()">📥 Lưu Báo Cáo PDF & Đồng Bộ Về Trang Chủ</button>
-        </form>
-    </div>
+        <!-- NÚT GỬI BÁO CÁO NẰM NGOÀI BẢO ĐẢM KHÔNG BỊ IN VÀO PDF -->
+        <button type="button" class="btn-submit" onclick="generatePDFAndUpload()">📥 Lưu Báo Cáo PDF & Đồng Bộ Về Trang Chủ</button>
+    </form>
 
     <script>
         const titles = [
@@ -252,25 +253,46 @@
             }
         }
 
+        // Đồng bộ dữ liệu ô nhập vào DOM trước khi chụp PDF
+        function syncInputValues() {
+            document.querySelectorAll('#qcForm input[type="text"]').forEach(input => {
+                input.setAttribute('value', input.value);
+            });
+            document.querySelectorAll('#qcForm select').forEach(select => {
+                const options = select.querySelectorAll('option');
+                options.forEach(opt => {
+                    if (opt.value === select.value) {
+                        opt.setAttribute('selected', 'selected');
+                    } else {
+                        opt.removeAttribute('selected');
+                    }
+                });
+            });
+        }
+
         async function generatePDFAndUpload() {
             const factory = document.getElementById('factoryInput').value.trim();
             const po = document.getElementById('poInput').value.trim();
+            const inspector = document.getElementById('inspectorInput').value.trim();
 
-            if (!factory || !po) {
-                alert('Vui lòng điền đầy đủ tên Xưởng và Mã PO trước khi gửi!');
+            if (!factory || !po || !inspector) {
+                alert('Vui lòng điền đầy đủ: Xưởng, Mã PO và Mã Nhân Viên kiểm tra!');
                 return;
             }
 
-            document.getElementById('loadingOverlay').style.display = 'flex';
-            document.getElementById('loadingText').innerText = 'Đang biên dịch tệp PDF từ trang đầu tiên...';
+            // Đồng bộ dữ liệu nhập vào DOM để chụp PDF nét và không bị mất chữ
+            syncInputValues();
 
-            // Cuộn màn hình lên đầu trước khi chụp canvas để tránh lỗi offset scrollY
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('loadingText').innerText = 'Đang biên dịch tệp PDF từ biểu mẫu...';
+
             window.scrollTo(0, 0);
 
             const element = document.getElementById('pdfContent');
+            const fileName = `QC_Report_${po}_${factory}.pdf`;
             const opt = {
                 margin:       [8, 8, 8, 8],
-                filename:     `QC_Report_${po}_${factory}.pdf`,
+                filename:     fileName,
                 image:        { type: 'jpeg', quality: 0.85 },
                 pagebreak:    { mode: ['css', 'legacy'] },
                 html2canvas:  { 
@@ -284,35 +306,46 @@
             };
 
             try {
-                const pdfWorker = html2pdf().from(element).set(opt);
-                const pdfBlob = await pdfWorker.output('blob');
-                
-                // Tải file PDF về máy
-                pdfWorker.save();
+                // Tạo Blob PDF
+                const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+
+                // Tải file PDF về máy người dùng
+                html2pdf().set(opt).from(element).save();
 
                 document.getElementById('loadingText').innerText = 'Đang đồng bộ báo cáo lên hệ thống...';
 
                 const form = document.getElementById('qcForm');
                 const formData = new FormData(form);
-                formData.append('pdf_report', pdfBlob, `QC_Report_${po}_${factory}.pdf`);
 
+                // Thêm file PDF với các alias tên trường phổ biến để Server nhận đúng 100%
+                formData.append('pdf_report', pdfBlob, fileName);
+                formData.append('pdf', pdfBlob, fileName);
+
+                // Thêm alias Mã nhân viên & Xưởng
+                formData.append('staffId', inspector);
+                formData.append('inspector_id', inspector);
+                formData.append('factory', factory);
+                formData.append('po', po);
+
+                // Thêm các ảnh đính kèm
                 for (let id in compressedFiles) {
                     formData.append(`photo_${id}`, compressedFiles[id]);
                 }
 
+                // Gửi dữ liệu tới API Server
                 const response = await fetch('/api/reports', {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 const data = await response.json();
                 document.getElementById('loadingOverlay').style.display = 'none';
 
-                if (data.success) {
-                    alert('Gửi báo cáo thành công!');
+                if (response.ok && data.success) {
+                    alert('Gửi báo cáo thành công! Dữ liệu đã được đồng bộ về trang chủ.');
                     window.location.reload();
                 } else {
-                    alert('Lỗi đồng bộ: ' + data.message);
+                    alert('Gửi thất bại: ' + (data.message || 'Lỗi không xác định từ máy chủ'));
                 }
             } catch (error) {
                 console.error(error);
@@ -321,42 +354,5 @@
             }
         }
     </script>
-    <script>
-  // Hàm tự động gọi API lấy dữ liệu báo cáo từ Google Sheets
-  async function loadReports() {
-    try {
-      const response = await fetch('/api/reports');
-      const result = await response.json();
-
-      if (result.success && Array.isArray(result.data)) {
-        const tableBody = document.getElementById('reportTableBody');
-        if (!tableBody) return;
-
-        tableBody.innerHTML = ''; // Làm sạch bảng trước khi render
-
-        result.data.forEach(item => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${item['Thời gian nộp'] || ''}</td>
-            <td>${item['Xưởng'] || ''}</td>
-            <td>${item['Mã PO'] || ''}</td>
-            <td>${item['Mã Nhân Viên'] || ''}</td>
-            <td>
-              ${item['Đường dẫn File PDF'] 
-                ? `<a href="${item['Đường dẫn File PDF']}" target="_blank" style="color: #2563eb; text-decoration: underline;">Xem PDF</a>` 
-                : 'Chưa có file'}
-            </td>
-          `;
-          tableBody.appendChild(row);
-        });
-      }
-    } catch (error) {
-      console.error('Lỗi khi nạp dữ liệu báo cáo:', error);
-    }
-  }
-
-  // Chạy hàm khi trang web hoàn tất tải nội dung
-  document.addEventListener('DOMContentLoaded', loadReports);
-</script>
 </body>
 </html>
