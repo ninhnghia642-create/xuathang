@@ -45,10 +45,13 @@ let sheets = null;
 
 function initGoogleApis() {
     try {
-        const privateKey = process.env.GOOGLE_PRIVATE_KEY
-            ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
+        let privateKey = process.env.GOOGLE_PRIVATE_KEY;
+        if (privateKey) {
+            privateKey = privateKey.replace(/\\n/g, '\n').replace(/"/g, '').trim();
+        }
+        const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL
+            ? process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL.trim()
             : null;
-        const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
 
         if (privateKey && clientEmail) {
             const auth = new google.auth.JWT(
@@ -63,6 +66,8 @@ function initGoogleApis() {
             drive = google.drive({ version: 'v3', auth });
             sheets = google.sheets({ version: 'v4', auth });
             console.log('✅ Đã kết nối Google Service Account thành công!');
+        } else {
+            console.warn('⚠️ Thiếu GOOGLE_PRIVATE_KEY hoặc GOOGLE_SERVICE_ACCOUNT_EMAIL');
         }
     } catch (err) {
         console.error('❌ Lỗi khởi tạo Google API:', err.message);
@@ -74,6 +79,20 @@ function extractGoogleId(input) {
     if (!input) return '';
     const match = input.match(/[-\w]{25,}/);
     return match ? match[0] : input.trim();
+}
+
+// Hàm tự động nhận diện tên Tab đầu tiên trong Google Sheets để tránh lỗi "Requested entity was not found"
+async function getFirstSheetTitle(sheetId) {
+    if (!sheets || !sheetId) return null;
+    try {
+        const meta = await sheets.spreadsheets.get({ spreadsheetId: sheetId });
+        if (meta.data && meta.data.sheets && meta.data.sheets.length > 0) {
+            return meta.data.sheets[0].properties.title;
+        }
+    } catch (err) {
+        console.warn('⚠️ Không thể lấy thông tin metadata Google Sheets:', err.message);
+    }
+    return null;
 }
 
 // ----------------------------------------------------
@@ -106,9 +125,12 @@ app.get('/api/reports', async (req, res) => {
 
     if (sheets && sheetId) {
         try {
+            const sheetTitle = await getFirstSheetTitle(sheetId);
+            const rangeStr = sheetTitle ? `'${sheetTitle}'!A2:E100` : 'A2:E100';
+
             const response = await sheets.spreadsheets.values.get({
                 spreadsheetId: sheetId,
-                range: 'A2:E100',
+                range: rangeStr,
             });
             const rows = response.data.values || [];
             sheetReports = rows.map(row => ({
@@ -159,7 +181,7 @@ async function processReportSave(req, file) {
             const driveResponse = await drive.files.create({
                 requestBody: {
                     name: `${Date.now()}_${file.originalname}`,
-                    parents: [folderId]
+                    parents: [folderId] // Bắt buộc lưu vào thư mục cụ thể để không bị lỗi Quota
                 },
                 media: {
                     mimeType: file.mimetype,
@@ -176,12 +198,17 @@ async function processReportSave(req, file) {
                     requestBody: { role: 'reader', type: 'anyone' },
                     supportsAllDrives: true
                 });
-            } catch (pErr) {}
+            } catch (pErr) {
+                console.warn('⚠️ Lỗi phân quyền chia sẻ tệp Drive:', pErr.message);
+            }
 
             pdfPublicUrl = driveResponse.data.webViewLink || `https://drive.google.com/file/d/${fileId}/view`;
+            console.log('✅ Đã tải thành công tệp PDF lên Google Drive:', pdfPublicUrl);
         } catch (driveErr) {
             console.warn('⚠️ Lỗi Google Drive Upload (Dùng lưu trữ cục bộ):', driveErr.message);
         }
+    } else {
+        console.warn('⚠️ Bỏ qua upload Drive: Chưa kết nối hoặc thiếu GOOGLE_DRIVE_FOLDER_ID');
     }
 
     // Ghi dữ liệu vào Google Sheets
@@ -190,20 +217,26 @@ async function processReportSave(req, file) {
 
     if (sheets && sheetId) {
         try {
+            const sheetTitle = await getFirstSheetTitle(sheetId);
+            const rangeStr = sheetTitle ? `'${sheetTitle}'!A:E` : 'A:E';
+
             await sheets.spreadsheets.values.append({
                 spreadsheetId: sheetId,
-                range: 'A:E',
+                range: rangeStr,
                 valueInputOption: 'USER_ENTERED',
                 requestBody: {
                     values: [[formattedTime, factory, po, staffId, pdfPublicUrl]]
                 }
             });
+            console.log('✅ Đã ghi thành công dữ liệu vào Google Sheets!');
         } catch (sheetErr) {
             console.warn('⚠️ Lỗi Google Sheets:', sheetErr.message);
         }
+    } else {
+        console.warn('⚠️ Bỏ qua ghi Sheet: Chưa kết nối hoặc thiếu GOOGLE_SHEET_ID');
     }
 
-    // Lưu vào bộ nhớ Ram tạm thời
+    // Lưu vào bộ nhớ RAM tạm thời
     inMemoryReports.unshift({
         timestamp: Date.now(),
         time: formattedTime,
@@ -217,12 +250,11 @@ async function processReportSave(req, file) {
 }
 
 // ----------------------------------------------------
-// 4. API BÁO CÁO TỪ MOBILE (POST /api/reports) - ĐÃ BỔ SUNG SỬA LỖI
+// 4. API BÁO CÁO TỪ MOBILE (POST /api/reports)
 // ----------------------------------------------------
 app.post('/api/reports', upload.any(), async (req, res) => {
     try {
         const files = req.files || [];
-        // Tìm file PDF trong danh sách các file gửi lên
         const pdfFile = files.find(f => f.fieldname === 'pdf_report' || f.fieldname === 'pdf' || f.mimetype === 'application/pdf');
 
         if (!pdfFile) {
