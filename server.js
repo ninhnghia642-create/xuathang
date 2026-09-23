@@ -11,8 +11,8 @@ const PORT = process.env.PORT || 3000;
 
 // Cấu hình Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Thư mục lưu tệp dự phòng cục bộ
 const uploadDir = path.join(__dirname, 'public', 'uploads');
@@ -77,7 +77,7 @@ function extractGoogleId(input) {
 }
 
 // ----------------------------------------------------
-// 1. API ĐĂNG NHẬP (KHẮC PHỤC LỖI KẾT NỐI MÁY CHỦ)
+// 1. API ĐĂNG NHẬP
 // ----------------------------------------------------
 const handleLogin = (req, res) => {
     const { username, password } = req.body;
@@ -95,7 +95,7 @@ app.post('/api/login', handleLogin);
 app.post('/login', handleLogin);
 
 // ----------------------------------------------------
-// 2. API LẤY DANH SÁCH BÁO CÁO
+// 2. API LẤY DANH SÁCH BÁO CÁO (GET /api/reports)
 // ----------------------------------------------------
 app.get('/api/reports', async (req, res) => {
     cleanOldMemoryReports();
@@ -139,80 +139,120 @@ app.get('/api/reports', async (req, res) => {
 });
 
 // ----------------------------------------------------
-// 3. API TẢI BÁO CÁO UP FILE (GỬI TRỰC TIẾP LÊN DRIVE / LƯU SERVER)
+// 3. CÁC CÔNG CỤ XỬ LÝ LƯU BÁO CÁO (DRIVE & SHEETS)
+// ----------------------------------------------------
+async function processReportSave(req, file) {
+    const factory = req.body.factory || 'N/A';
+    const po = req.body.po || 'N/A';
+    const staffId = req.body.staffId || req.body.inspector_id || 'N/A';
+
+    const now = new Date();
+    const formattedTime = now.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+    let pdfPublicUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+
+    const rawFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
+    const folderId = extractGoogleId(rawFolderId);
+
+    // Tải lên Google Drive
+    if (drive && folderId) {
+        try {
+            const driveResponse = await drive.files.create({
+                requestBody: {
+                    name: `${Date.now()}_${file.originalname}`,
+                    parents: [folderId]
+                },
+                media: {
+                    mimeType: file.mimetype,
+                    body: fs.createReadStream(file.path)
+                },
+                fields: 'id, webViewLink',
+                supportsAllDrives: true
+            });
+
+            const fileId = driveResponse.data.id;
+            try {
+                await drive.permissions.create({
+                    fileId: fileId,
+                    requestBody: { role: 'reader', type: 'anyone' },
+                    supportsAllDrives: true
+                });
+            } catch (pErr) {}
+
+            pdfPublicUrl = driveResponse.data.webViewLink || `https://drive.google.com/file/d/${fileId}/view`;
+        } catch (driveErr) {
+            console.warn('⚠️ Lỗi Google Drive Upload (Dùng lưu trữ cục bộ):', driveErr.message);
+        }
+    }
+
+    // Ghi dữ liệu vào Google Sheets
+    const rawSheetId = process.env.GOOGLE_SHEET_ID || '';
+    const sheetId = extractGoogleId(rawSheetId);
+
+    if (sheets && sheetId) {
+        try {
+            await sheets.spreadsheets.values.append({
+                spreadsheetId: sheetId,
+                range: 'A:E',
+                valueInputOption: 'USER_ENTERED',
+                requestBody: {
+                    values: [[formattedTime, factory, po, staffId, pdfPublicUrl]]
+                }
+            });
+        } catch (sheetErr) {
+            console.warn('⚠️ Lỗi Google Sheets:', sheetErr.message);
+        }
+    }
+
+    // Lưu vào bộ nhớ Ram tạm thời
+    inMemoryReports.unshift({
+        timestamp: Date.now(),
+        time: formattedTime,
+        factory: factory,
+        po: po,
+        staffId: staffId,
+        pdfUrl: pdfPublicUrl
+    });
+
+    return pdfPublicUrl;
+}
+
+// ----------------------------------------------------
+// 4. API BÁO CÁO TỪ MOBILE (POST /api/reports) - ĐÃ BỔ SUNG SỬA LỖI
+// ----------------------------------------------------
+app.post('/api/reports', upload.any(), async (req, res) => {
+    try {
+        const files = req.files || [];
+        // Tìm file PDF trong danh sách các file gửi lên
+        const pdfFile = files.find(f => f.fieldname === 'pdf_report' || f.fieldname === 'pdf' || f.mimetype === 'application/pdf');
+
+        if (!pdfFile) {
+            return res.status(400).json({ success: false, message: 'Thiếu tệp PDF báo cáo gửi lên!' });
+        }
+
+        const pdfPublicUrl = await processReportSave(req, pdfFile);
+
+        return res.json({
+            success: true,
+            message: 'Gửi báo cáo thành công!',
+            pdfUrl: pdfPublicUrl
+        });
+    } catch (error) {
+        console.error('❌ Lỗi POST /api/reports:', error);
+        return res.status(500).json({ success: false, message: 'Lỗi máy chủ: ' + error.message });
+    }
+});
+
+// ----------------------------------------------------
+// 5. API UPLOAD ĐỘC LẬP (POST /api/upload)
 // ----------------------------------------------------
 app.post('/api/upload', upload.single('pdf'), async (req, res) => {
     try {
-        const { factory, po, staffId } = req.body;
         const file = req.file;
-
         if (!file) {
             return res.status(400).json({ success: false, message: 'Vui lòng chọn tệp PDF báo cáo!' });
         }
 
-        const now = new Date();
-        const formattedTime = now.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-        let pdfPublicUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
-
-        const rawFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
-        const folderId = extractGoogleId(rawFolderId);
-
-        if (drive && folderId) {
-            try {
-                const driveResponse = await drive.files.create({
-                    requestBody: {
-                        name: `${Date.now()}_${file.originalname}`,
-                        parents: [folderId]
-                    },
-                    media: {
-                        mimeType: file.mimetype,
-                        body: fs.createReadStream(file.path)
-                    },
-                    fields: 'id, webViewLink',
-                    supportsAllDrives: true
-                });
-
-                const fileId = driveResponse.data.id;
-                try {
-                    await drive.permissions.create({
-                        fileId: fileId,
-                        requestBody: { role: 'reader', type: 'anyone' },
-                        supportsAllDrives: true
-                    });
-                } catch (pErr) {}
-
-                pdfPublicUrl = driveResponse.data.webViewLink || `https://drive.google.com/file/d/${fileId}/view`;
-            } catch (driveErr) {
-                console.warn('⚠️ Lỗi Google Drive Upload (Dùng lưu trữ cục bộ):', driveErr.message);
-            }
-        }
-
-        const rawSheetId = process.env.GOOGLE_SHEET_ID || '';
-        const sheetId = extractGoogleId(rawSheetId);
-
-        if (sheets && sheetId) {
-            try {
-                await sheets.spreadsheets.values.append({
-                    spreadsheetId: sheetId,
-                    range: 'A:E',
-                    valueInputOption: 'USER_ENTERED',
-                    requestBody: {
-                        values: [[formattedTime, factory || '', po || '', staffId || '', pdfPublicUrl]]
-                    }
-                });
-            } catch (sheetErr) {
-                console.warn('⚠️ Lỗi Google Sheets:', sheetErr.message);
-            }
-        }
-
-        inMemoryReports.unshift({
-            timestamp: Date.now(),
-            time: formattedTime,
-            factory: factory || 'N/A',
-            po: po || 'N/A',
-            staffId: staffId || 'N/A',
-            pdfUrl: pdfPublicUrl
-        });
+        const pdfPublicUrl = await processReportSave(req, file);
 
         return res.json({
             success: true,
@@ -225,8 +265,15 @@ app.post('/api/upload', upload.single('pdf'), async (req, res) => {
     }
 });
 
+// Catch-all route cho Frontend SPA
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Bắt lỗi toàn cục đảm bảo luôn trả về JSON
+app.use((err, req, res, next) => {
+    console.error('❌ Global Server Error:', err);
+    res.status(500).json({ success: false, message: 'Lỗi hệ thống: ' + err.message });
 });
 
 app.listen(PORT, () => {
