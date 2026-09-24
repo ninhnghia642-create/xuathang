@@ -14,13 +14,14 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Thư mục chứa tệp tạm thời trong lúc upload
+// Thư mục tạm thời lưu file trước khi upload lên Drive
 const uploadDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Cấu hình Multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => {
@@ -66,13 +67,14 @@ function initGoogleApis() {
 }
 initGoogleApis();
 
+// Hàm trích xuất ID chuẩn từ đường dẫn Google Drive/Sheets
 function extractGoogleId(input) {
     if (!input) return '';
     const match = input.match(/[-\w]{25,}/);
     return match ? match[0] : input.trim();
 }
 
-// Hàm nhận diện tên Tab đầu tiên trong Google Sheets
+// Hàm lấy tên Sheet đầu tiên tự động
 async function getFirstSheetTitle(sheetId) {
     if (!sheets || !sheetId) return null;
     try {
@@ -105,7 +107,7 @@ app.post('/api/login', handleLogin);
 app.post('/login', handleLogin);
 
 // ----------------------------------------------------
-// 2. API LẤY DANH SÁCH BÁO CÁO (Lấy từ Google Sheets)
+// 2. API LẤY DANH SÁCH BÁO CÁO (TỪ GOOGLE SHEETS)
 // ----------------------------------------------------
 app.get('/api/reports', async (req, res) => {
     let sheetReports = [];
@@ -152,20 +154,25 @@ async function processReportSave(req, file) {
     const rawFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
     const folderId = extractGoogleId(rawFolderId);
 
-    // Kiểm tra kết nối Google Drive bắt buộc
-    if (!drive || !folderId) {
+    // KIỂM TRA BẮT BUỘC: Ngăn việc upload vào root Drive của Service Account làm tràn Quota (Lỗi 0MB)
+    if (!drive) {
         if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-        throw new Error('Chưa kết nối Google Drive hoặc thiếu cấu hình GOOGLE_DRIVE_FOLDER_ID.');
+        throw new Error('Chưa kết nối dịch vụ Google Drive.');
+    }
+
+    if (!folderId || folderId.length < 10) {
+        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+        throw new Error('Chưa khai báo GOOGLE_DRIVE_FOLDER_ID trên Render hoặc ID Folder không đúng.');
     }
 
     let pdfDriveUrl = '';
 
-    // 1. Upload trực tiếp file PDF lên Google Drive
+    // 1. Tải trực tiếp file PDF vào thư mục chỉ định trên Drive
     try {
         const driveResponse = await drive.files.create({
             requestBody: {
                 name: `QC_${po}_${Date.now()}.pdf`,
-                parents: [folderId]
+                parents: [folderId] // Đưa file vào Folder ID được chia sẻ
             },
             media: {
                 mimeType: file.mimetype || 'application/pdf',
@@ -177,7 +184,7 @@ async function processReportSave(req, file) {
 
         const fileId = driveResponse.data.id;
 
-        // Phân quyền xem công khai cho file trên Drive
+        // 2. Mở quyền công khai để ai có link cũng xem được
         try {
             await drive.permissions.create({
                 fileId: fileId,
@@ -185,17 +192,18 @@ async function processReportSave(req, file) {
                 supportsAllDrives: true
             });
         } catch (pErr) {
-            console.warn('⚠️ Lỗi phân quyền công khai tệp Drive:', pErr.message);
+            console.warn('⚠️ Bỏ qua phân quyền công khai:', pErr.message);
         }
 
         pdfDriveUrl = driveResponse.data.webViewLink || `https://drive.google.com/file/d/${fileId}/view`;
-        console.log('✅ Đã đẩy trực tiếp tệp PDF lên Google Drive:', pdfDriveUrl);
+        console.log('✅ Đã tải file PDF lên Google Drive thành công:', pdfDriveUrl);
+
     } catch (driveErr) {
         if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-        throw new Error('Không thể tải tệp lên Google Drive: ' + driveErr.message);
+        throw new Error('Lỗi Google Drive Upload: ' + driveErr.message);
     }
 
-    // 2. Ghi nhật ký link báo cáo Drive vào Google Sheets
+    // 3. Ghi dữ liệu & Link Drive vào Google Sheets
     const rawSheetId = process.env.GOOGLE_SHEET_ID || '';
     const sheetId = extractGoogleId(rawSheetId);
 
@@ -212,13 +220,13 @@ async function processReportSave(req, file) {
                     values: [[formattedTime, factory, po, staffId, pdfDriveUrl]]
                 }
             });
-            console.log('✅ Đã ghi thông tin báo cáo vào Google Sheets!');
+            console.log('✅ Đã lưu thông tin báo cáo vào Google Sheets!');
         } catch (sheetErr) {
-            console.warn('⚠️ Lỗi ghi dữ liệu vào Google Sheets:', sheetErr.message);
+            console.warn('⚠️ Lỗi Google Sheets:', sheetErr.message);
         }
     }
 
-    // 3. Tự động xót/xóa tệp tạm trên bộ nhớ Server ngay sau khi tải xong
+    // 4. Xóa tệp tạm trên máy chủ ngay lập tức
     if (fs.existsSync(file.path)) {
         fs.unlinkSync(file.path);
     }
@@ -274,7 +282,7 @@ app.post('/api/upload', upload.single('pdf'), async (req, res) => {
     }
 });
 
-// Catch-all route cho Frontend Single Page App
+// Catch-all route cho Frontend SPA
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
