@@ -7,7 +7,15 @@
     <!-- Thư viện Xuất PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent; /* Loại bỏ vệt đen khi chạm trên iOS */
+        }
+        html, body {
+            -webkit-text-size-adjust: 100%; /* Chống tự động đổi cỡ chữ trên iOS Safari */
+        }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background: #f0f2f5; 
@@ -35,7 +43,7 @@
             padding-bottom: 8px; 
         }
 
-        /* Tiêu đề mục - Cấu hình chống bị cắt ngang & chống lẻ loi ở cuối trang */
+        /* Tiêu đề mục - Cấu hình chống bị cắt ngang & chống lẻ loi ở cuối trang (Tương thích WebKit / iOS) */
         .section-title { 
             font-weight: bold; 
             background: #e9ecef; 
@@ -46,34 +54,78 @@
             font-size: 13px; 
             color: #004080; 
             text-transform: uppercase; 
+            -webkit-column-break-inside: avoid !important;
+            -webkit-break-inside: avoid !important;
             page-break-inside: avoid !important; 
             break-inside: avoid !important;
+            -webkit-break-after: avoid !important;
             page-break-after: avoid !important;
             break-after: avoid !important;
         }
 
-        .form-group { margin-bottom: 12px; page-break-inside: avoid !important; break-inside: avoid !important; }
+        .form-group { 
+            margin-bottom: 12px; 
+            -webkit-column-break-inside: avoid !important;
+            -webkit-break-inside: avoid !important;
+            page-break-inside: avoid !important; 
+            break-inside: avoid !important; 
+        }
         label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 12px; color: #333; }
+        
+        /* Tối ưu hóa font-size 16px trên mobile để Safari không bị tự động Auto-Zoom khi focus vào ô input */
         input[type="text"], input[type="number"], select, textarea { 
             width: 100%; 
             padding: 10px; 
             border: 1px solid #ccc; 
             border-radius: 6px; 
-            font-size: 13px; 
+            font-size: 16px; 
             background-color: #fff; 
             transition: border-color 0.2s; 
             outline: none; 
             -webkit-appearance: none;
         }
+        @media (min-width: 769px) {
+            input[type="text"], input[type="number"], select, textarea { 
+                font-size: 13px; 
+            }
+        }
+
         input:focus, select:focus, textarea:focus { border-color: #004080; box-shadow: 0 0 0 2px rgba(0,64,128,0.1); }
         textarea { resize: vertical; min-height: 60px; font-family: inherit; }
 
-        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; page-break-inside: avoid !important; break-inside: avoid !important; }
-        .excel-table { width: 100%; border-collapse: collapse; font-size: 11px; page-break-inside: avoid !important; break-inside: avoid !important; }
+        .table-responsive { 
+            overflow-x: auto; 
+            -webkit-overflow-scrolling: touch; 
+            margin-bottom: 10px; 
+            -webkit-column-break-inside: avoid !important;
+            -webkit-break-inside: avoid !important;
+            page-break-inside: avoid !important; 
+            break-inside: avoid !important; 
+        }
+        .excel-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 11px; 
+            -webkit-column-break-inside: avoid !important;
+            -webkit-break-inside: avoid !important;
+            page-break-inside: avoid !important; 
+            break-inside: avoid !important; 
+        }
         .excel-table th, .excel-table td { border: 1px solid #bbb; padding: 6px 4px; text-align: center; vertical-align: middle; }
         .excel-table th { background-color: #f2f4f7; color: #004080; font-weight: bold; }
         .excel-table td.text-left { text-align: left; padding-left: 6px; font-weight: 500; }
-        .excel-table input { width: 100%; padding: 6px 2px; border: 1px solid #ddd; border-radius: 4px; text-align: center; font-size: 11px; }
+        
+        .excel-table input { 
+            width: 100%; 
+            padding: 6px 2px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            text-align: center; 
+            font-size: 14px; 
+        }
+        @media (min-width: 769px) {
+            .excel-table input { font-size: 11px; }
+        }
 
         /* Khung chứa danh sách ảnh chuẩn ngắt trang PDF */
         .photo-grid { 
@@ -92,6 +144,8 @@
             border: 1px solid #e0e0e0; 
             padding: 10px; 
             border-radius: 8px; 
+            -webkit-column-break-inside: avoid !important;
+            -webkit-break-inside: avoid !important;
             page-break-inside: avoid !important; 
             break-inside: avoid !important; 
             box-sizing: border-box; 
@@ -111,7 +165,7 @@
             word-wrap: break-word;
         }
 
-        .photo-box input[type="file"] { font-size: 11px; width: 100%; cursor: pointer; }
+        .photo-box input[type="file"] { font-size: 12px; width: 100%; cursor: pointer; }
         .preview-container { position: relative; margin-top: 6px; display: none; }
         
         .preview-container img { 
@@ -122,17 +176,19 @@
             border: 1px solid #ddd; 
             display: block;
         }
+        
+        /* Tối ưu vùng chạm nút xóa cho iOS màn hình cảm ứng */
         .btn-remove-photo { 
             position: absolute; 
-            top: 4px; 
-            right: 4px; 
-            background: rgba(220, 53, 69, 0.9); 
+            top: 2px; 
+            right: 2px; 
+            background: rgba(220, 53, 69, 0.95); 
             color: #fff; 
             border: none; 
             border-radius: 50%; 
-            width: 24px; 
-            height: 24px; 
-            font-size: 12px; 
+            width: 30px; 
+            height: 30px; 
+            font-size: 14px; 
             cursor: pointer; 
             display: flex; 
             align-items: center; 
@@ -140,8 +196,9 @@
             font-weight: bold; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             transition: background 0.2s;
+            -webkit-appearance: none;
         }
-        .btn-remove-photo:hover {
+        .btn-remove-photo:hover, .btn-remove-photo:active {
             background: rgba(200, 35, 51, 1);
         }
 
@@ -170,11 +227,19 @@
             text-align: center; 
             box-shadow: 0 4px 12px rgba(0, 64, 128, 0.2); 
             transition: background 0.2s, transform 0.1s; 
+            -webkit-appearance: none;
         }
         .btn-submit:active { transform: scale(0.99); background: #002b5c; }
         .btn-submit:disabled { background: #6c757d; cursor: not-allowed; box-shadow: none; }
 
-        .row-flex { display: flex; gap: 10px; page-break-inside: avoid !important; break-inside: avoid !important; }
+        .row-flex { 
+            display: flex; 
+            gap: 10px; 
+            -webkit-column-break-inside: avoid !important;
+            -webkit-break-inside: avoid !important;
+            page-break-inside: avoid !important; 
+            break-inside: avoid !important; 
+        }
         .row-flex .form-group { flex: 1; }
 
         /* Overlay khi đang tạo PDF */
@@ -195,6 +260,7 @@
             flex-direction: column; 
             text-align: center; 
             padding: 20px; 
+            -webkit-backdrop-filter: blur(3px);
             backdrop-filter: blur(3px); 
         }
         .spinner { 
@@ -208,7 +274,7 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Responsive cho thiết bị màn hình nhỏ (Smartphone) */
+        /* Responsive cho thiết bị màn hình nhỏ (Smartphone / iOS Devices) */
         @media (max-width: 480px) {
             .container { padding: 12px; }
             .row-flex { flex-direction: column; gap: 0; }
@@ -384,7 +450,7 @@
         const compressedFiles = {};
         const gridContainer = document.getElementById('photoGridContainer');
 
-        // Khởi tạo các khung tải ảnh (Đã loại bỏ capture="environment" để hỗ trợ cả Tải ảnh từ thư viện lẫn Chụp ảnh trực tiếp)
+        // Khởi tạo các khung tải ảnh
         titles.forEach((title, index) => {
             const id = index + 1;
             const div = document.createElement('div');
@@ -400,7 +466,7 @@
             gridContainer.appendChild(div);
         });
 
-        // Nén ảnh & Hiển thị Xem trước
+        // Nén ảnh & Hiển thị Xem trước - Tối ưu hóa bộ nhớ cho iOS Safari
         function compressAndPreview(event, id) {
             const file = event.target.files[0];
             if (!file) return;
@@ -441,7 +507,7 @@
             }
         }
 
-        // Xóa ảnh đã chọn (Khôi phục khung chọn về trạng thái ban đầu)
+        // Xóa ảnh đã chọn
         function removePhoto(id) {
             delete compressedFiles[id];
             document.getElementById(`file_${id}`).value = '';
@@ -449,7 +515,7 @@
             document.getElementById(`img_preview_${id}`).src = '';
         }
 
-        // Đồng bộ dữ liệu hiển thị vào DOM trước khi chụp PDF
+        // Đồng bộ dữ liệu hiển thị vào thuộc tính DOM (Bắt buộc cho iOS & html2canvas)
         function syncInputValues() {
             document.querySelectorAll('#qcForm input[type="text"], #qcForm input[type="number"]').forEach(input => {
                 input.setAttribute('value', input.value);
@@ -469,7 +535,7 @@
             });
         }
 
-        // Tạo PDF & Tải lên Server
+        // Tạo PDF & Tải lên Server - Đã khắc phục triệt để lỗi Safari / iOS Canvas Limit
         async function generatePDFAndUpload() {
             const factoryInput = document.getElementById('factoryInput');
             const poInput = document.getElementById('poInput');
@@ -498,27 +564,33 @@
                 loadingOverlay.style.display = 'flex';
                 loadingText.innerText = 'Đang biên dịch tệp PDF từ biểu mẫu...';
 
-                // Đồng bộ toàn bộ giá trị nhập vào thuộc tính HTML
+                // Đồng bộ toàn bộ giá trị nhập vào thuộc tính DOM
                 syncInputValues();
                 element.classList.add('generating-pdf');
                 window.scrollTo(0, 0);
 
+                // Độ trễ 300ms giúp WebKit / Safari cập nhật DOM ổn định trước khi chụp màn hình
+                await new Promise(resolve => setTimeout(resolve, 300));
+
                 const fileName = `QC_Report_${po}_${factory}.pdf`;
                 
+                // Cấu hình tối ưu riêng biệt chống tràn bộ nhớ (Memory Limit Crash) trên iOS
                 const opt = {
                     margin:       [8, 8, 8, 8],
                     filename:     fileName,
-                    image:        { type: 'jpeg', quality: 0.85 },
+                    image:        { type: 'jpeg', quality: 0.8 },
                     pagebreak:    { 
                         mode: ['avoid-all', 'css', 'legacy'],
                         avoid: ['.photo-box', '.section-title', '.excel-table', '.row-flex', '.form-group']
                     },
                     html2canvas:  { 
-                        scale: 2, 
+                        scale: 1.5, // Giảm scale xuống 1.5 để bảo vệ bộ nhớ RAM Safari trên iPhone
                         useCORS: true, 
+                        allowTaint: true,
                         logging: false,
                         scrollY: 0,
-                        scrollX: 0
+                        scrollX: 0,
+                        windowWidth: document.documentElement.offsetWidth
                     },
                     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 };
