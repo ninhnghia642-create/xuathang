@@ -142,7 +142,7 @@
             margin: 5px; 
             background: #fafafa; 
             border: 1px solid #e0e0e0; 
-            padding: 10px; 
+            padding: 8px; 
             border-radius: 8px; 
             -webkit-column-break-inside: avoid !important;
             -webkit-break-inside: avoid !important;
@@ -158,19 +158,19 @@
             color: #004080; 
             margin-bottom: 6px; 
             font-weight: bold; 
-            line-height: 1.4; 
-            min-height: 30px;
+            line-height: 1.3; 
+            min-height: 28px;
             position: relative; 
             z-index: 1;
             word-wrap: break-word;
         }
 
-        .photo-box input[type="file"] { font-size: 12px; width: 100%; cursor: pointer; }
+        .photo-box input[type="file"] { font-size: 11px; width: 100%; cursor: pointer; }
         .preview-container { position: relative; margin-top: 6px; display: none; }
         
         .preview-container img { 
             width: 100%; 
-            height: 150px; 
+            height: 130px; 
             object-fit: cover; 
             border-radius: 6px; 
             border: 1px solid #ddd; 
@@ -186,8 +186,8 @@
             color: #fff; 
             border: none; 
             border-radius: 50%; 
-            width: 30px; 
-            height: 30px; 
+            width: 28px; 
+            height: 28px; 
             font-size: 14px; 
             cursor: pointer; 
             display: flex; 
@@ -276,10 +276,12 @@
 
         /* Responsive cho thiết bị màn hình nhỏ (Smartphone / iOS Devices) */
         @media (max-width: 480px) {
-            .container { padding: 12px; }
+            .container { padding: 10px; }
             .row-flex { flex-direction: column; gap: 0; }
-            .photo-box { width: 100%; display: block; margin: 5px 0; }
-            .photo-box .photo-title { min-height: auto; }
+            /* GIỮ NGUYÊN HIỂN THỊ 2 CỘT ẢNH NHƯ TRANG MÁY TÍNH TRÊN DI ĐỘNG */
+            .photo-box { width: calc(50% - 10px); display: inline-block; margin: 5px; }
+            .photo-box .photo-title { min-height: 28px; font-size: 10px; }
+            .preview-container img { height: 110px; }
         }
     </style>
 </head>
@@ -466,7 +468,7 @@
             gridContainer.appendChild(div);
         });
 
-        // Nén ảnh & Hiển thị Xem trước - Tối ưu hóa bộ nhớ cho iOS Safari
+        // Nén ảnh & Hiển thị Xem trước - Tối ưu chất lượng ảnh 0.7 cho iOS WebKit
         function compressAndPreview(event, id) {
             const file = event.target.files[0];
             if (!file) return;
@@ -478,8 +480,8 @@
                 img.src = e.target.result;
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800;
-                    const MAX_HEIGHT = 800;
+                    const MAX_WIDTH = 750;
+                    const MAX_HEIGHT = 750;
                     let width = img.width;
                     let height = img.height;
 
@@ -500,9 +502,9 @@
 
                         const previewBox = document.getElementById(`preview_box_${id}`);
                         const imgPreview = document.getElementById(`img_preview_${id}`);
-                        imgPreview.src = canvas.toDataURL('image/jpeg', 0.85);
+                        imgPreview.src = canvas.toDataURL('image/jpeg', 0.7);
                         previewBox.style.display = 'block';
-                    }, 'image/jpeg', 0.85);
+                    }, 'image/jpeg', 0.7);
                 }
             }
         }
@@ -533,6 +535,11 @@
                     }
                 });
             });
+        }
+
+        // Kiểm tra thiết bị iOS / Mobile
+        function isIOSDevice() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         }
 
         // Tạo PDF & Tải lên Server - Đã khắc phục triệt để lỗi Safari / iOS Canvas Limit
@@ -569,22 +576,23 @@
                 element.classList.add('generating-pdf');
                 window.scrollTo(0, 0);
 
-                // Độ trễ 300ms giúp WebKit / Safari cập nhật DOM ổn định trước khi chụp màn hình
                 await new Promise(resolve => setTimeout(resolve, 300));
 
                 const fileName = `QC_Report_${po}_${factory}.pdf`;
                 
-                // Cấu hình tối ưu riêng biệt chống tràn bộ nhớ (Memory Limit Crash) trên iOS
+                // Tự động điều chỉnh Scale để bảo vệ bộ nhớ RAM Safari trên iOS không bị Crash
+                const canvasScale = isIOSDevice() ? 1.0 : 1.5;
+
                 const opt = {
                     margin:       [8, 8, 8, 8],
                     filename:     fileName,
-                    image:        { type: 'jpeg', quality: 0.8 },
+                    image:        { type: 'jpeg', quality: 0.75 },
                     pagebreak:    { 
                         mode: ['avoid-all', 'css', 'legacy'],
                         avoid: ['.photo-box', '.section-title', '.excel-table', '.row-flex', '.form-group']
                     },
                     html2canvas:  { 
-                        scale: 1.5, // Giảm scale xuống 1.5 để bảo vệ bộ nhớ RAM Safari trên iPhone
+                        scale: canvasScale,
                         useCORS: true, 
                         allowTaint: true,
                         logging: false,
@@ -595,9 +603,9 @@
                     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 };
 
+                // TẠO FILE BLOB ĐỂ TẢI LÊN MÁY CHỦ TRƯỚC (Tránh bị ngắt kết nối do save file)
                 const worker = html2pdf().set(opt).from(element);
                 const pdfBlob = await worker.output('blob');
-                await worker.save();
 
                 loadingText.innerText = 'Đang đồng bộ báo cáo lên hệ thống...';
 
@@ -615,18 +623,28 @@
                     formData.append(`photo_${id}`, compressedFiles[id]);
                 }
 
+                // GỬI BÁO CÁO LÊN SERVER TRƯỚC
                 const response = await fetch('/api/reports', {
                     method: 'POST',
                     body: formData
                 });
 
                 const data = await response.json();
-                loadingOverlay.style.display = 'none';
 
                 if (response.ok && data.success) {
+                    loadingText.innerText = 'Tải báo cáo về thiết bị...';
+                    // TẢI FILE PDF VỀ THIẾT BỊ SAU KHI DỮ LIỆU ĐÃ VỀ SERVER RỒI
+                    try {
+                        await worker.save();
+                    } catch (e) {
+                        console.log("iOS save bypass:", e);
+                    }
+                    
+                    loadingOverlay.style.display = 'none';
                     alert('🎉 Gửi báo cáo thành công! Dữ liệu đã được đồng bộ về trang chủ.');
                     window.location.reload();
                 } else {
+                    loadingOverlay.style.display = 'none';
                     alert('❌ Gửi thất bại: ' + (data.message || 'Lỗi không xác định từ máy chủ'));
                     btnSubmit.disabled = false;
                 }
