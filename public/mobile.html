@@ -2,43 +2,61 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Biểu Mẫu Kiểm Tra Giám Sát Kho Vận Sàn - QC Report</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 10px; color: #333; }
-        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; padding: 10px; color: #1c1e21; line-height: 1.4; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
         
-        h2 { text-align: center; color: #004080; margin-top: 0; margin-bottom: 5px; font-size: 20px; }
-        .subtitle { text-align: center; font-weight: bold; margin-bottom: 20px; color: #555; font-size: 13px; }
+        h2 { text-align: center; color: #004080; margin-bottom: 4px; font-size: 20px; text-transform: uppercase; }
+        .subtitle { text-align: center; font-weight: 600; margin-bottom: 18px; color: #555; font-size: 12px; border-bottom: 2px solid #004080; padding-bottom: 8px; }
 
-        .section-title { font-weight: bold; background: #e9ecef; padding: 8px 12px; margin-top: 15px; margin-bottom: 10px; border-left: 4px solid #004080; font-size: 14px; page-break-inside: avoid; break-inside: avoid; }
+        .section-title { font-weight: bold; background: #e9ecef; padding: 8px 12px; margin-top: 16px; margin-bottom: 10px; border-left: 4px solid #004080; font-size: 13px; color: #004080; text-transform: uppercase; page-break-inside: avoid; break-inside: avoid; }
 
         .form-group { margin-bottom: 12px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; }
-        input[type="text"], select, textarea { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-        
-        .excel-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; font-size: 12px; page-break-inside: avoid; break-inside: avoid; }
-        .excel-table th, .excel-table td { border: 1px solid #bbb; padding: 6px; text-align: center; vertical-align: middle; }
-        .excel-table th { background-color: #f2f2f2; color: #000; font-weight: bold; }
-        .excel-table td.text-left { text-align: left; }
-        .excel-table input, .excel-table select { width: 100%; padding: 4px; border: 1px solid #ddd; border-radius: 3px; text-align: center; font-size: 12px; }
+        label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 12px; color: #333; }
+        input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; background-color: #fff; transition: border-color 0.2s; outline: none; }
+        input:focus, select:focus, textarea:focus { border-color: #004080; }
+        textarea { resize: vertical; min-height: 60px; font-family: inherit; }
 
-        .photo-grid { width: 100%; font-size: 0; margin-top: 10px; }
-        .photo-box { display: inline-block; width: 48%; margin: 1%; vertical-align: top; font-size: 13px; background: #fafafa; border: 1px solid #ddd; padding: 10px; border-radius: 6px; page-break-inside: avoid; break-inside: avoid; }
-        .photo-box label { display: block; font-size: 12px; color: #333; margin-bottom: 6px; font-weight: bold; }
+        /* Bảng biểu responsive */
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; }
+        .excel-table { width: 100%; border-collapse: collapse; font-size: 11px; page-break-inside: avoid; break-inside: avoid; }
+        .excel-table th, .excel-table td { border: 1px solid #bbb; padding: 6px 4px; text-align: center; vertical-align: middle; }
+        .excel-table th { background-color: #f2f4f7; color: #004080; font-weight: bold; }
+        .excel-table td.text-left { text-align: left; padding-left: 6px; font-weight: 500; }
+        .excel-table input { width: 100%; padding: 6px 2px; border: 1px solid #ddd; border-radius: 4px; text-align: center; font-size: 11px; }
+
+        /* Khung ảnh chụp */
+        .photo-grid { display: flex; flex-wrap: wrap; margin: -5px; }
+        .photo-box { width: calc(50% - 10px); margin: 5px; background: #fafafa; border: 1px solid #e0e0e0; padding: 8px; border-radius: 8px; page-break-inside: avoid; break-inside: avoid; box-sizing: border-box; }
+        .photo-box label { display: block; font-size: 11px; color: #004080; margin-bottom: 6px; font-weight: bold; line-height: 1.3; min-height: 28px; }
         .photo-box input[type="file"] { font-size: 11px; width: 100%; }
+        .preview-container { position: relative; margin-top: 6px; display: none; }
+        .preview-container img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
+        .btn-remove-photo { position: absolute; top: 4px; right: 4px; background: rgba(220, 53, 69, 0.9); color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
-        .btn-submit { display: block; width: 100%; max-width: 800px; margin: 20px auto 10px auto; padding: 14px; background: #004080; color: white; border: none; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; text-align: center; }
-        .btn-submit:hover { background: #002b5c; }
+        /* Nút gửi báo cáo */
+        .btn-submit { display: block; width: 100%; max-width: 800px; margin: 20px auto; padding: 14px; background: #004080; color: white; border: none; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; text-align: center; box-shadow: 0 4px 12px rgba(0, 64, 128, 0.2); transition: background 0.2s, transform 0.1s; }
+        .btn-submit:active { transform: scale(0.99); background: #002b5c; }
+        .btn-submit:disabled { background: #6c757d; cursor: not-allowed; box-shadow: none; }
 
-        .row-flex { display: flex; gap: 15px; page-break-inside: avoid; break-inside: avoid; }
+        .row-flex { display: flex; gap: 10px; page-break-inside: avoid; break-inside: avoid; }
         .row-flex .form-group { flex: 1; }
 
-        #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 16px; font-weight: bold; flex-direction: column; text-align: center; padding: 20px;}
-        .spinner { border: 5px solid #f3f3f3; border-top: 5px solid #28a745; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        /* Loading Overlay */
+        #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 15px; font-weight: 500; flex-direction: column; text-align: center; padding: 20px; backdrop-filter: blur(3px); }
+        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #28a745; border-radius: 50%; width: 46px; height: 46px; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 480px) {
+            .container { padding: 12px; }
+            .row-flex { flex-direction: column; gap: 0; }
+            .photo-box { width: 100%; }
+            .photo-box label { min-height: auto; }
+        }
     </style>
 </head>
 <body>
@@ -48,22 +66,22 @@
     </div>
 
     <form id="qcForm">
-        <!-- VÙNG XUẤT PDF (ĐÃ ĐƯỢC TÁCH NÚT BẤM RA NGOÀI) -->
+        <!-- VÙNG XUẤT PDF -->
         <div class="container" id="pdfContent">
             <h2>监装检验报告</h2>
             <div class="subtitle">BÁO CÁO KIỂM TRA GIÁM SÁT XUẤT KHO VÁN SÀN (QC INSPECTION REPORT)</div>
 
             <div class="row-flex">
                 <div class="form-group">
-                    <label>厂区 / Xưởng (Factory):</label>
-                    <select name="factory" id="factoryInput" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background-color: #fff;">
+                    <label>厂区 / Xưởng (Factory): <span style="color:red;">*</span></label>
+                    <select name="factory" id="factoryInput" required>
                         <option value="" disabled selected>-- Chọn nhà xưởng --</option>
                         <option value="Xưởng cũ">老厂区 / Xưởng cũ</option>
                         <option value="Xưởng mới">新厂区 / Xưởng mới</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>发货PO / Mã PO:</label>
+                    <label>发货PO / Mã PO: <span style="color:red;">*</span></label>
                     <input type="text" name="po" id="poInput" required placeholder="Nhập mã PO xuất hàng...">
                 </div>
             </div>
@@ -71,102 +89,106 @@
             <div class="row-flex">
                 <div class="form-group">
                     <label>总托数 / Tổng số pallet (Total Pallets):</label>
-                    <input type="text" name="total_pallet" placeholder="Ví dụ: 24">
+                    <input type="number" inputmode="numeric" name="total_pallet" placeholder="Ví dụ: 24">
                 </div>
                 <div class="form-group">
-                    <label>监仓员 / Mã Nhân Viên Kiểm Tra (Inspector ID):</label>
+                    <label>监仓员 / Mã NV Kiểm Tra (Inspector ID): <span style="color:red;">*</span></label>
                     <input type="text" name="inspector_id" id="inspectorInput" required placeholder="Nhập mã nhân viên...">
                 </div>
             </div>
 
             <div class="section-title">外观检验 - Nội Dung Kiểm Tra Ngoại Quan</div>
-            <table class="excel-table">
-                <tr>
-                    <th>Hạng mục kiểm tra</th><th>Tiêu chuẩn</th><th>Lỗi</th>
-                    <th>Hạng mục kiểm tra</th><th>Tiêu chuẩn</th><th>Lỗi</th>
-                </tr>
-                <tr>
-                    <td class="text-left">1. Đối chiếu mã hợp đồng</td>
-                    <td><input type="text" name="chk_1_std" value="是"></td>
-                    <td><input type="text" name="chk_1_err" value="无"></td>
-                    <td class="text-left">2. Đai nhựa tốt không?</td>
-                    <td><input type="text" name="chk_2_std" value="是"></td>
-                    <td><input type="text" name="chk_2_err" value="无"></td>
-                </tr>
-                <tr>
-                    <td class="text-left">3. Pallet mốc / hư hỏng</td>
-                    <td><input type="text" name="chk_3_std" value="否"></td>
-                    <td><input type="text" name="chk_3_err" value="无"></td>
-                    <td class="text-left">4. Thùng carton hở keo</td>
-                    <td><input type="text" name="chk_4_std" value="否"></td>
-                    <td><input type="text" name="chk_4_err" value="无"></td>
-                </tr>
-                <tr>
-                    <td class="text-left">5. Đinh lộ ra ngoài pallet</td>
-                    <td><input type="text" name="chk_5_std" value="否"></td>
-                    <td><input type="text" name="chk_5_err" value="无"></td>
-                    <td class="text-left">6. Thùng carton rách/mốc</td>
-                    <td><input type="text" name="chk_6_std" value="否"></td>
-                    <td><input type="text" name="chk_6_err" value="无"></td>
-                </tr>
-                <tr>
-                    <td class="text-left">7. Trụ gỗ dưới pallet tốt</td>
-                    <td><input type="text" name="chk_7_std" value="是"></td>
-                    <td><input type="text" name="chk_7_err" value="无"></td>
-                    <td class="text-left">8. Pallet có bị lệch không</td>
-                    <td><input type="text" name="chk_8_std" value="否"></td>
-                    <td><input type="text" name="chk_8_err" value="无"></td>
-                </tr>
-                <tr>
-                    <td class="text-left">9. Tem chống giả</td>
-                    <td><input type="text" name="chk_9_std" value="否"></td>
-                    <td><input type="text" name="chk_9_err" value="无"></td>
-                    <td class="text-left">10. Độ ẩm ván đậy</td>
-                    <td><input type="text" name="chk_10_std" value="否"></td>
-                    <td><input type="text" name="chk_10_err" value="无"></td>
-                </tr>
-                <tr>
-                    <td class="text-left">11. Ván đậy bị mốc</td>
-                    <td><input type="text" name="chk_11_std" value="否"></td>
-                    <td><input type="text" name="chk_11_err" value="无"></td>
-                    <td class="text-left">12. Đóng công dính mưa</td>
-                    <td><input type="text" name="chk_12_std" value="否"></td>
-                    <td><input type="text" name="chk_12_err" value="无"></td>
-                </tr>
-                <tr>
-                    <td class="text-left">13. Bề ngoài ẩm ướt</td>
-                    <td><input type="text" name="chk_13_std" value="否"></td>
-                    <td><input type="text" name="chk_13_err" value="无"></td>
-                    <td class="text-left">14. Màng chít có vết mưa</td>
-                    <td><input type="text" name="chk_14_std" value="否"></td>
-                    <td><input type="text" name="chk_14_err" value="无"></td>
-                </tr>
-            </table>
+            <div class="table-responsive">
+                <table class="excel-table">
+                    <tr>
+                        <th>Hạng mục kiểm tra</th><th>Tiêu chuẩn</th><th>Lỗi</th>
+                        <th>Hạng mục kiểm tra</th><th>Tiêu chuẩn</th><th>Lỗi</th>
+                    </tr>
+                    <tr>
+                        <td class="text-left">1. Đối chiếu mã hợp đồng</td>
+                        <td><input type="text" name="chk_1_std" value="是"></td>
+                        <td><input type="text" name="chk_1_err" value="无"></td>
+                        <td class="text-left">2. Đai nhựa tốt không?</td>
+                        <td><input type="text" name="chk_2_std" value="是"></td>
+                        <td><input type="text" name="chk_2_err" value="无"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">3. Pallet mốc / hư hỏng</td>
+                        <td><input type="text" name="chk_3_std" value="否"></td>
+                        <td><input type="text" name="chk_3_err" value="无"></td>
+                        <td class="text-left">4. Thùng carton hở keo</td>
+                        <td><input type="text" name="chk_4_std" value="否"></td>
+                        <td><input type="text" name="chk_4_err" value="无"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">5. Đinh lộ ra ngoài pallet</td>
+                        <td><input type="text" name="chk_5_std" value="否"></td>
+                        <td><input type="text" name="chk_5_err" value="无"></td>
+                        <td class="text-left">6. Thùng carton rách/mốc</td>
+                        <td><input type="text" name="chk_6_std" value="否"></td>
+                        <td><input type="text" name="chk_6_err" value="无"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">7. Trụ gỗ dưới pallet tốt</td>
+                        <td><input type="text" name="chk_7_std" value="是"></td>
+                        <td><input type="text" name="chk_7_err" value="无"></td>
+                        <td class="text-left">8. Pallet có bị lệch không</td>
+                        <td><input type="text" name="chk_8_std" value="否"></td>
+                        <td><input type="text" name="chk_8_err" value="无"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">9. Tem chống giả</td>
+                        <td><input type="text" name="chk_9_std" value="否"></td>
+                        <td><input type="text" name="chk_9_err" value="无"></td>
+                        <td class="text-left">10. Độ ẩm ván đậy</td>
+                        <td><input type="text" name="chk_10_std" value="否"></td>
+                        <td><input type="text" name="chk_10_err" value="无"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">11. Ván đậy bị mốc</td>
+                        <td><input type="text" name="chk_11_std" value="否"></td>
+                        <td><input type="text" name="chk_11_err" value="无"></td>
+                        <td class="text-left">12. Đóng công dính mưa</td>
+                        <td><input type="text" name="chk_12_std" value="否"></td>
+                        <td><input type="text" name="chk_12_err" value="无"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">13. Bề ngoài ẩm ướt</td>
+                        <td><input type="text" name="chk_13_std" value="否"></td>
+                        <td><input type="text" name="chk_13_err" value="无"></td>
+                        <td class="text-left">14. Màng chít có vết mưa</td>
+                        <td><input type="text" name="chk_14_std" value="否"></td>
+                        <td><input type="text" name="chk_14_err" value="无"></td>
+                    </tr>
+                </table>
+            </div>
 
             <div class="section-title">盖板含水率 & 托盘含水率 - Kiểm Tra Độ Ẩm</div>
-            <table class="excel-table">
-                <tr>
-                    <th>Hạng mục</th><th>Điểm 1</th><th>Điểm 2</th><th>Điểm 3</th><th>Điểm 4</th><th>Điểm 5</th><th>Lỗi / Ghi chú</th>
-                </tr>
-                <tr>
-                    <td class="text-left"><b>Độ ẩm ván đậy</b></td>
-                    <td><input type="text" name="moisture_cover_1" placeholder="7"></td>
-                    <td><input type="text" name="moisture_cover_2" placeholder="14"></td>
-                    <td><input type="text" name="moisture_cover_3" placeholder="14"></td>
-                    <td><input type="text" name="moisture_cover_4" placeholder="5"></td>
-                    <td><input type="text" name="moisture_cover_5" placeholder="9"></td>
-                    <td><input type="text" name="moisture_cover_err" value="无"></td>
-                </tr>
-                <tr>
-                    <td class="text-left"><b>Độ ẩm pallet</b></td>
-                    <td><input type="text" name="moisture_pallet_1" placeholder="10"></td>
-                    <td><input type="text" name="moisture_pallet_2" placeholder="15"></td>
-                    <td><input type="text" name="moisture_pallet_3" placeholder="13"></td>
-                    <td><input type="text" name="moisture_pallet_4" placeholder="13"></td>
-                    <td><input type="text" name="moisture_pallet_5" placeholder="11"></td>
-                    <td><input type="text" name="moisture_pallet_err" value="无"></td>
-                </tr>
-            </table>
+            <div class="table-responsive">
+                <table class="excel-table">
+                    <tr>
+                        <th>Hạng mục</th><th>Điểm 1</th><th>Điểm 2</th><th>Điểm 3</th><th>Điểm 4</th><th>Điểm 5</th><th>Lỗi / Ghi chú</th>
+                    </tr>
+                    <tr>
+                        <td class="text-left"><b>Độ ẩm ván đậy</b></td>
+                        <td><input type="number" inputmode="decimal" name="moisture_cover_1" placeholder="7"></td>
+                        <td><input type="number" inputmode="decimal" name="moisture_cover_2" placeholder="14"></td>
+                        <td><input type="number" inputmode="decimal" name="moisture_cover_3" placeholder="14"></td>
+                        <td><input type="number" inputmode="decimal" name="moisture_cover_4" placeholder="5"></td>
+                        <td><input type="number" inputmode="decimal" name="moisture_cover_5" placeholder="9"></td>
+                        <td><input type="text" name="moisture_cover_err" value="无"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left"><b>Độ ẩm pallet</b></td>
+                        <td><input type="number" inputmode="decimal" name="moisture_pallet_1" placeholder="10"></td>
+                        <td><input type="number" inputmode="decimal" name="moisture_pallet_2" placeholder="15"></td>
+                        <td><input type="number" inputmode="decimal" name="moisture_pallet_3" placeholder="13"></td>
+                        <td><input type="number" inputmode="decimal" name="moisture_pallet_4" placeholder="13"></td>
+                        <td><input type="number" inputmode="decimal" name="moisture_pallet_5" placeholder="11"></td>
+                        <td><input type="text" name="moisture_pallet_err" value="无"></td>
+                    </tr>
+                </table>
+            </div>
 
             <div class="section-title">外观判定 & 备注 - Kết Luận & Ghi Chú</div>
             <div class="row-flex">
@@ -179,7 +201,7 @@
                 </div>
                 <div class="form-group">
                     <label>Ghi chú (Note):</label>
-                    <input type="text" name="note" placeholder="Nhập ghi chú nếu có...">
+                    <textarea name="note" placeholder="Nhập ghi chú nếu có..."></textarea>
                 </div>
             </div>
 
@@ -187,8 +209,8 @@
             <div class="photo-grid" id="photoGridContainer"></div>
         </div>
 
-        <!-- NÚT GỬI BÁO CÁO NẰM NGOÀI BẢO ĐẢM KHÔNG BỊ IN VÀO PDF -->
-        <button type="button" class="btn-submit" onclick="generatePDFAndUpload()">📥 Lưu Báo Cáo PDF & Đồng Bộ Về Trang Chủ</button>
+        <!-- NÚT GỬI BÁO CÁO NẰM NGOÀI ĐỂ KHÔNG IN VÀO PDF -->
+        <button type="button" id="btnSubmit" class="btn-submit" onclick="generatePDFAndUpload()">📥 Lưu Báo Cáo PDF & Đồng Bộ Về Trang Chủ</button>
     </form>
 
     <script>
@@ -204,17 +226,23 @@
         const compressedFiles = {};
         const gridContainer = document.getElementById('photoGridContainer');
 
+        // Khởi tạo các khung tải ảnh
         titles.forEach((title, index) => {
+            const id = index + 1;
             const div = document.createElement('div');
             div.className = 'photo-box';
             div.innerHTML = `
                 <label>${title}</label>
-                <input type="file" id="file_${index + 1}" accept="image/*" onchange="compressAndPreview(event, ${index + 1})">
-                <div id="preview_${index + 1}" style="margin-top: 8px;"></div>
+                <input type="file" id="file_${id}" accept="image/*" onchange="compressAndPreview(event, ${id})">
+                <div id="preview_box_${id}" class="preview-container">
+                    <img id="img_preview_${id}" src="" alt="Preview">
+                    <button type="button" class="btn-remove-photo" onclick="removePhoto(${id})" title="Xóa ảnh">✕</button>
+                </div>
             `;
             gridContainer.appendChild(div);
         });
 
+        // Nén ảnh & Hiển thị Xem trước
         function compressAndPreview(event, id) {
             const file = event.target.files[0];
             if (!file) return;
@@ -246,17 +274,30 @@
                         const compressedFile = new File([blob], `photo_${id}.jpg`, { type: 'image/jpeg', lastModified: Date.now() });
                         compressedFiles[id] = compressedFile;
 
-                        const output = document.getElementById(`preview_${id}`);
-                        output.innerHTML = `<img src="${canvas.toDataURL('image/jpeg', 0.8)}" style="width: 100%; height: 130px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;">`;
-                    }, 'image/jpeg', 0.8);
+                        const previewBox = document.getElementById(`preview_box_${id}`);
+                        const imgPreview = document.getElementById(`img_preview_${id}`);
+                        imgPreview.src = canvas.toDataURL('image/jpeg', 0.85);
+                        previewBox.style.display = 'block';
+                    }, 'image/jpeg', 0.85);
                 }
             }
         }
 
-        // Đồng bộ dữ liệu ô nhập vào DOM trước khi chụp PDF
+        // Xóa ảnh đã chọn
+        function removePhoto(id) {
+            delete compressedFiles[id];
+            document.getElementById(`file_${id}`).value = '';
+            document.getElementById(`preview_box_${id}`).style.display = 'none';
+            document.getElementById(`img_preview_${id}`).src = '';
+        }
+
+        // Đồng bộ dữ liệu người dùng nhập vào DOM để chụp PDF nét và không bị mất chữ
         function syncInputValues() {
-            document.querySelectorAll('#qcForm input[type="text"]').forEach(input => {
+            document.querySelectorAll('#qcForm input[type="text"], #qcForm input[type="number"]').forEach(input => {
                 input.setAttribute('value', input.value);
+            });
+            document.querySelectorAll('#qcForm textarea').forEach(textarea => {
+                textarea.textContent = textarea.value;
             });
             document.querySelectorAll('#qcForm select').forEach(select => {
                 const options = select.querySelectorAll('option');
@@ -270,64 +311,71 @@
             });
         }
 
+        // Tiến hành Tạo PDF & Tải lên Server
         async function generatePDFAndUpload() {
             const factory = document.getElementById('factoryInput').value.trim();
             const po = document.getElementById('poInput').value.trim();
             const inspector = document.getElementById('inspectorInput').value.trim();
 
             if (!factory || !po || !inspector) {
-                alert('Vui lòng điền đầy đủ: Xưởng, Mã PO và Mã Nhân Viên kiểm tra!');
+                alert('Vui lòng điền đầy đủ thông tin bắt buộc: Xưởng, Mã PO và Mã Nhân Viên kiểm tra!');
                 return;
             }
 
-            // Đồng bộ dữ liệu nhập vào DOM để chụp PDF nét và không bị mất chữ
-            syncInputValues();
-
-            document.getElementById('loadingOverlay').style.display = 'flex';
-            document.getElementById('loadingText').innerText = 'Đang biên dịch tệp PDF từ biểu mẫu...';
-
-            window.scrollTo(0, 0);
-
-            const element = document.getElementById('pdfContent');
-            const fileName = `QC_Report_${po}_${factory}.pdf`;
-            const opt = {
-                margin:       [8, 8, 8, 8],
-                filename:     fileName,
-                image:        { type: 'jpeg', quality: 0.85 },
-                pagebreak:    { mode: ['css', 'legacy'] },
-                html2canvas:  { 
-                    scale: 2, 
-                    useCORS: true, 
-                    logging: false,
-                    scrollY: 0,
-                    scrollX: 0
-                },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
+            const btnSubmit = document.getElementById('btnSubmit');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingText = document.getElementById('loadingText');
 
             try {
-                // Tạo Blob PDF
-                const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+                // Khóa nút bấm & Bật Loading
+                btnSubmit.disabled = true;
+                loadingOverlay.style.display = 'flex';
+                loadingText.innerText = 'Đang biên dịch tệp PDF từ biểu mẫu...';
+
+                // Đồng bộ dữ liệu nhập vào thuộc tính DOM
+                syncInputValues();
+                window.scrollTo(0, 0);
+
+                const element = document.getElementById('pdfContent');
+                const fileName = `QC_Report_${po}_${factory}.pdf`;
+                const opt = {
+                    margin:       [8, 8, 8, 8],
+                    filename:     fileName,
+                    image:        { type: 'jpeg', quality: 0.85 },
+                    pagebreak:    { mode: ['css', 'legacy'] },
+                    html2canvas:  { 
+                        scale: 2, 
+                        useCORS: true, 
+                        logging: false,
+                        scrollY: 0,
+                        scrollX: 0
+                    },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
+                // Tạo đối tượng html2pdf worker duy nhất để vừa tải về vừa tạo blob gửi server
+                const worker = html2pdf().set(opt).from(element);
+                const pdfBlob = await worker.output('blob');
 
                 // Tải file PDF về máy người dùng
-                html2pdf().set(opt).from(element).save();
+                await worker.save();
 
-                document.getElementById('loadingText').innerText = 'Đang đồng bộ báo cáo lên hệ thống...';
+                loadingText.innerText = 'Đang đồng bộ báo cáo lên hệ thống...';
 
                 const form = document.getElementById('qcForm');
                 const formData = new FormData(form);
 
-                // Thêm file PDF với các alias tên trường phổ biến để Server nhận đúng 100%
+                // Thêm file PDF với các alias tiêu chuẩn
                 formData.append('pdf_report', pdfBlob, fileName);
                 formData.append('pdf', pdfBlob, fileName);
 
-                // Thêm alias Mã nhân viên & Xưởng
+                // Thêm các thông tin cơ bản
                 formData.append('staffId', inspector);
                 formData.append('inspector_id', inspector);
                 formData.append('factory', factory);
                 formData.append('po', po);
 
-                // Thêm các ảnh đính kèm
+                // Thêm 18 ảnh đính kèm đã nén
                 for (let id in compressedFiles) {
                     formData.append(`photo_${id}`, compressedFiles[id]);
                 }
@@ -339,18 +387,20 @@
                 });
 
                 const data = await response.json();
-                document.getElementById('loadingOverlay').style.display = 'none';
+                loadingOverlay.style.display = 'none';
 
                 if (response.ok && data.success) {
-                    alert('Gửi báo cáo thành công! Dữ liệu đã được đồng bộ về trang chủ.');
+                    alert('🎉 Gửi báo cáo thành công! Dữ liệu đã được đồng bộ về trang chủ.');
                     window.location.reload();
                 } else {
-                    alert('Gửi thất bại: ' + (data.message || 'Lỗi không xác định từ máy chủ'));
+                    alert('❌ Gửi thất bại: ' + (data.message || 'Lỗi không xác định từ máy chủ'));
+                    btnSubmit.disabled = false;
                 }
             } catch (error) {
                 console.error(error);
-                document.getElementById('loadingOverlay').style.display = 'none';
-                alert('Có lỗi xảy ra: ' + error.message);
+                loadingOverlay.style.display = 'none';
+                alert('⚠️ Có lỗi xảy ra: ' + error.message);
+                btnSubmit.disabled = false;
             }
         }
     </script>
