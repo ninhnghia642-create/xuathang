@@ -4,14 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Biểu Mẫu Kiểm Tra Giám Sát Kho Vận Sàn - QC Report</title>
+    <!-- Thư viện Xuất PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; padding: 10px; color: #1c1e21; line-height: 1.4; }
-        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: #f0f2f5; 
+            padding: 10px; 
+            color: #1c1e21; 
+            line-height: 1.4; 
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: #fff; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
+        }
         
         h2 { text-align: center; color: #004080; margin-bottom: 4px; font-size: 20px; text-transform: uppercase; }
-        .subtitle { text-align: center; font-weight: 600; margin-bottom: 18px; color: #555; font-size: 12px; border-bottom: 2px solid #004080; padding-bottom: 8px; }
+        .subtitle { 
+            text-align: center; 
+            font-weight: 600; 
+            margin-bottom: 18px; 
+            color: #555; 
+            font-size: 12px; 
+            border-bottom: 2px solid #004080; 
+            padding-bottom: 8px; 
+        }
 
         /* Tiêu đề mục - Cấu hình chống bị cắt ngang & chống lẻ loi ở cuối trang */
         .section-title { 
@@ -32,8 +54,18 @@
 
         .form-group { margin-bottom: 12px; page-break-inside: avoid !important; break-inside: avoid !important; }
         label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 12px; color: #333; }
-        input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; background-color: #fff; transition: border-color 0.2s; outline: none; }
-        input:focus, select:focus, textarea:focus { border-color: #004080; }
+        input[type="text"], input[type="number"], select, textarea { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 6px; 
+            font-size: 13px; 
+            background-color: #fff; 
+            transition: border-color 0.2s; 
+            outline: none; 
+            -webkit-appearance: none;
+        }
+        input:focus, select:focus, textarea:focus { border-color: #004080; box-shadow: 0 0 0 2px rgba(0,64,128,0.1); }
         textarea { resize: vertical; min-height: 60px; font-family: inherit; }
 
         .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; page-break-inside: avoid !important; break-inside: avoid !important; }
@@ -66,7 +98,6 @@
             font-size: 12px;
         }
 
-        /* ĐỔI LABEL THÀNH DIV - KHẮC PHỤC LỖI TÀNG HÌNH CHỮ */
         .photo-box .photo-title { 
             display: block; 
             font-size: 11px; 
@@ -80,7 +111,7 @@
             word-wrap: break-word;
         }
 
-        .photo-box input[type="file"] { font-size: 11px; width: 100%; }
+        .photo-box input[type="file"] { font-size: 11px; width: 100%; cursor: pointer; }
         .preview-container { position: relative; margin-top: 6px; display: none; }
         
         .preview-container img { 
@@ -89,8 +120,26 @@
             object-fit: cover; 
             border-radius: 6px; 
             border: 1px solid #ddd; 
+            display: block;
         }
-        .btn-remove-photo { position: absolute; top: 4px; right: 4px; background: rgba(220, 53, 69, 0.9); color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .btn-remove-photo { 
+            position: absolute; 
+            top: 4px; 
+            right: 4px; 
+            background: rgba(220, 53, 69, 0.9); 
+            color: #fff; 
+            border: none; 
+            border-radius: 50%; 
+            width: 24px; 
+            height: 24px; 
+            font-size: 12px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
 
         /* Khi xuất PDF: Tự động ẩn nút chọn file & nút xóa ảnh */
         .generating-pdf input[type="file"],
@@ -101,21 +150,65 @@
             margin-top: 4px;
         }
 
-        .btn-submit { display: block; width: 100%; max-width: 800px; margin: 20px auto; padding: 14px; background: #004080; color: white; border: none; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; text-align: center; box-shadow: 0 4px 12px rgba(0, 64, 128, 0.2); transition: background 0.2s, transform 0.1s; }
+        .btn-submit { 
+            display: block; 
+            width: 100%; 
+            max-width: 800px; 
+            margin: 20px auto; 
+            padding: 14px; 
+            background: #004080; 
+            color: white; 
+            border: none; 
+            font-size: 15px; 
+            font-weight: bold; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            text-align: center; 
+            box-shadow: 0 4px 12px rgba(0, 64, 128, 0.2); 
+            transition: background 0.2s, transform 0.1s; 
+        }
         .btn-submit:active { transform: scale(0.99); background: #002b5c; }
         .btn-submit:disabled { background: #6c757d; cursor: not-allowed; box-shadow: none; }
 
         .row-flex { display: flex; gap: 10px; page-break-inside: avoid !important; break-inside: avoid !important; }
         .row-flex .form-group { flex: 1; }
 
-        #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 15px; font-weight: 500; flex-direction: column; text-align: center; padding: 20px; backdrop-filter: blur(3px); }
-        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #28a745; border-radius: 50%; width: 46px; height: 46px; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
+        /* Overlay khi đang tạo PDF */
+        #loadingOverlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.75); 
+            z-index: 9999; 
+            justify-content: center; 
+            align-items: center; 
+            color: white; 
+            font-size: 15px; 
+            font-weight: 500; 
+            flex-direction: column; 
+            text-align: center; 
+            padding: 20px; 
+            backdrop-filter: blur(3px); 
+        }
+        .spinner { 
+            border: 4px solid rgba(255,255,255,0.3); 
+            border-top: 4px solid #28a745; 
+            border-radius: 50%; 
+            width: 46px; 
+            height: 46px; 
+            animation: spin 0.8s linear infinite; 
+            margin-bottom: 15px; 
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        /* Responsive cho thiết bị màn hình nhỏ (Smartphone) */
         @media (max-width: 480px) {
             .container { padding: 12px; }
             .row-flex { flex-direction: column; gap: 0; }
-            .photo-box { width: 100%; display: block; }
+            .photo-box { width: 100%; display: block; margin: 5px 0; }
             .photo-box .photo-title { min-height: auto; }
         }
     </style>
@@ -255,14 +348,14 @@
             <div class="row-flex">
                 <div class="form-group">
                     <label>Đánh giá ngoại quan (Evaluation):</label>
-                    <select name="evaluation">
+                    <select name="evaluation" id="evaluationInput">
                         <option value="合格" selected>合格 (Đạt / Pass)</option>
                         <option value="不合格">不合格 (Không đạt / Fail)</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Ghi chú (Note):</label>
-                    <textarea name="note" placeholder="Nhập ghi chú nếu có..."></textarea>
+                    <textarea name="note" id="noteInput" placeholder="Nhập ghi chú nếu có..."></textarea>
                 </div>
             </div>
 
@@ -287,14 +380,14 @@
         const compressedFiles = {};
         const gridContainer = document.getElementById('photoGridContainer');
 
-        // Khởi tạo các khung tải ảnh - ĐÃ SỬA THẺ LABEL THÀNH DIV
+        // Khởi tạo các khung tải ảnh - Đã thêm capture="environment" hỗ trợ chụp ảnh trực tiếp trên di động
         titles.forEach((title, index) => {
             const id = index + 1;
             const div = document.createElement('div');
             div.className = 'photo-box';
             div.innerHTML = `
                 <div class="photo-title">${title}</div>
-                <input type="file" id="file_${id}" accept="image/*" onchange="compressAndPreview(event, ${id})">
+                <input type="file" id="file_${id}" accept="image/*" capture="environment" onchange="compressAndPreview(event, ${id})">
                 <div id="preview_box_${id}" class="preview-container">
                     <img id="img_preview_${id}" src="" alt="Preview">
                     <button type="button" class="btn-remove-photo" onclick="removePhoto(${id})" title="Xóa ảnh">✕</button>
@@ -352,7 +445,7 @@
             document.getElementById(`img_preview_${id}`).src = '';
         }
 
-        // Đồng bộ dữ liệu
+        // Đồng bộ dữ liệu hiển thị vào DOM trước khi chụp PDF
         function syncInputValues() {
             document.querySelectorAll('#qcForm input[type="text"], #qcForm input[type="number"]').forEach(input => {
                 input.setAttribute('value', input.value);
@@ -372,14 +465,22 @@
             });
         }
 
-        // Tạo PDF & Tải lên
+        // Tạo PDF & Tải lên Server
         async function generatePDFAndUpload() {
-            const factory = document.getElementById('factoryInput').value.trim();
-            const po = document.getElementById('poInput').value.trim();
-            const inspector = document.getElementById('inspectorInput').value.trim();
+            const factoryInput = document.getElementById('factoryInput');
+            const poInput = document.getElementById('poInput');
+            const inspectorInput = document.getElementById('inspectorInput');
 
+            const factory = factoryInput.value.trim();
+            const po = poInput.value.trim();
+            const inspector = inspectorInput.value.trim();
+
+            // Kiểm tra các trường bắt buộc
             if (!factory || !po || !inspector) {
                 alert('Vui lòng điền đầy đủ thông tin bắt buộc: Xưởng, Mã PO và Mã Nhân Viên kiểm tra!');
+                if (!factory) factoryInput.focus();
+                else if (!po) poInput.focus();
+                else if (!inspector) inspectorInput.focus();
                 return;
             }
 
@@ -393,6 +494,7 @@
                 loadingOverlay.style.display = 'flex';
                 loadingText.innerText = 'Đang biên dịch tệp PDF từ biểu mẫu...';
 
+                // Đồng bộ toàn bộ giá trị nhập vào thuộc tính HTML
                 syncInputValues();
                 element.classList.add('generating-pdf');
                 window.scrollTo(0, 0);
@@ -405,7 +507,7 @@
                     image:        { type: 'jpeg', quality: 0.85 },
                     pagebreak:    { 
                         mode: ['avoid-all', 'css', 'legacy'],
-                        avoid: ['.photo-box', '.section-title', '.excel-table', '.row-flex']
+                        avoid: ['.photo-box', '.section-title', '.excel-table', '.row-flex', '.form-group']
                     },
                     html2canvas:  { 
                         scale: 2, 
