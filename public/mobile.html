@@ -139,6 +139,10 @@
             justify-content: center; 
             font-weight: bold; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: background 0.2s;
+        }
+        .btn-remove-photo:hover {
+            background: rgba(200, 35, 51, 1);
         }
 
         /* Khi xuất PDF: Tự động ẩn nút chọn file & nút xóa ảnh */
@@ -380,17 +384,17 @@
         const compressedFiles = {};
         const gridContainer = document.getElementById('photoGridContainer');
 
-        // Khởi tạo các khung tải ảnh - Đã thêm capture="environment" hỗ trợ chụp ảnh trực tiếp trên di động
+        // Khởi tạo các khung tải ảnh (Đã loại bỏ capture="environment" để hỗ trợ cả Tải ảnh từ thư viện lẫn Chụp ảnh trực tiếp)
         titles.forEach((title, index) => {
             const id = index + 1;
             const div = document.createElement('div');
             div.className = 'photo-box';
             div.innerHTML = `
                 <div class="photo-title">${title}</div>
-                <input type="file" id="file_${id}" accept="image/*" capture="environment" onchange="compressAndPreview(event, ${id})">
+                <input type="file" id="file_${id}" accept="image/*" onchange="compressAndPreview(event, ${id})">
                 <div id="preview_box_${id}" class="preview-container">
                     <img id="img_preview_${id}" src="" alt="Preview">
-                    <button type="button" class="btn-remove-photo" onclick="removePhoto(${id})" title="Xóa ảnh">✕</button>
+                    <button type="button" class="btn-remove-photo" onclick="removePhoto(${id})" title="Xóa ảnh chọn nhầm">✕</button>
                 </div>
             `;
             gridContainer.appendChild(div);
@@ -437,7 +441,7 @@
             }
         }
 
-        // Xóa ảnh đã chọn
+        // Xóa ảnh đã chọn (Khôi phục khung chọn về trạng thái ban đầu)
         function removePhoto(id) {
             delete compressedFiles[id];
             document.getElementById(`file_${id}`).value = '';
