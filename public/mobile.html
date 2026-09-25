@@ -38,6 +38,16 @@
         .preview-container img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
         .btn-remove-photo { position: absolute; top: 4px; right: 4px; background: rgba(220, 53, 69, 0.9); color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
+        /* QUY TẮC CẤU HÌNH ĐẶC BIỆT KHI XUẤT PDF:
+           Ẩn nút chọn file và nút xóa ảnh để giữ Tiêu đề bức ảnh & Ảnh hiển thị sạch sẽ trên PDF */
+        .generating-pdf input[type="file"],
+        .generating-pdf .btn-remove-photo {
+            display: none !important;
+        }
+        .generating-pdf .preview-container {
+            margin-top: 4px;
+        }
+
         /* Nút gửi báo cáo */
         .btn-submit { display: block; width: 100%; max-width: 800px; margin: 20px auto; padding: 14px; background: #004080; color: white; border: none; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; text-align: center; box-shadow: 0 4px 12px rgba(0, 64, 128, 0.2); transition: background 0.2s, transform 0.1s; }
         .btn-submit:active { transform: scale(0.99); background: #002b5c; }
@@ -209,7 +219,7 @@
             <div class="photo-grid" id="photoGridContainer"></div>
         </div>
 
-        <!-- NÚT GỬI BÁO CÁO NẰM NGOÀI ĐỂ KHÔNG IN VÀO PDF -->
+        <!-- NÚT GỬI BÁO CÁO -->
         <button type="button" id="btnSubmit" class="btn-submit" onclick="generatePDFAndUpload()">📥 Lưu Báo Cáo PDF & Đồng Bộ Về Trang Chủ</button>
     </form>
 
@@ -291,7 +301,7 @@
             document.getElementById(`img_preview_${id}`).src = '';
         }
 
-        // Đồng bộ dữ liệu người dùng nhập vào DOM để chụp PDF nét và không bị mất chữ
+        // Đồng bộ dữ liệu nhập vào thuộc tính DOM để html2canvas chụp không bị mất văn bản
         function syncInputValues() {
             document.querySelectorAll('#qcForm input[type="text"], #qcForm input[type="number"]').forEach(input => {
                 input.setAttribute('value', input.value);
@@ -311,7 +321,7 @@
             });
         }
 
-        // Tiến hành Tạo PDF & Tải lên Server
+        // Tạo PDF & Tải lên Server
         async function generatePDFAndUpload() {
             const factory = document.getElementById('factoryInput').value.trim();
             const po = document.getElementById('poInput').value.trim();
@@ -325,6 +335,7 @@
             const btnSubmit = document.getElementById('btnSubmit');
             const loadingOverlay = document.getElementById('loadingOverlay');
             const loadingText = document.getElementById('loadingText');
+            const element = document.getElementById('pdfContent');
 
             try {
                 // Khóa nút bấm & Bật Loading
@@ -332,11 +343,13 @@
                 loadingOverlay.style.display = 'flex';
                 loadingText.innerText = 'Đang biên dịch tệp PDF từ biểu mẫu...';
 
-                // Đồng bộ dữ liệu nhập vào thuộc tính DOM
+                // 1. Đồng bộ dữ liệu nhập
                 syncInputValues();
+
+                // 2. KÍCH HOẠT CHẾ ĐỘ XUẤT PDF: Ẩn nút chọn file & ẩn nút xóa ✕
+                element.classList.add('generating-pdf');
                 window.scrollTo(0, 0);
 
-                const element = document.getElementById('pdfContent');
                 const fileName = `QC_Report_${po}_${factory}.pdf`;
                 const opt = {
                     margin:       [8, 8, 8, 8],
@@ -353,7 +366,7 @@
                     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 };
 
-                // Tạo đối tượng html2pdf worker duy nhất để vừa tải về vừa tạo blob gửi server
+                // Tạo PDF bằng html2pdf
                 const worker = html2pdf().set(opt).from(element);
                 const pdfBlob = await worker.output('blob');
 
@@ -365,22 +378,17 @@
                 const form = document.getElementById('qcForm');
                 const formData = new FormData(form);
 
-                // Thêm file PDF với các alias tiêu chuẩn
                 formData.append('pdf_report', pdfBlob, fileName);
                 formData.append('pdf', pdfBlob, fileName);
-
-                // Thêm các thông tin cơ bản
                 formData.append('staffId', inspector);
                 formData.append('inspector_id', inspector);
                 formData.append('factory', factory);
                 formData.append('po', po);
 
-                // Thêm 18 ảnh đính kèm đã nén
                 for (let id in compressedFiles) {
                     formData.append(`photo_${id}`, compressedFiles[id]);
                 }
 
-                // Gửi dữ liệu tới API Server
                 const response = await fetch('/api/reports', {
                     method: 'POST',
                     body: formData
@@ -401,6 +409,9 @@
                 loadingOverlay.style.display = 'none';
                 alert('⚠️ Có lỗi xảy ra: ' + error.message);
                 btnSubmit.disabled = false;
+            } finally {
+                // 3. KHÔI PHỤC GIAO DIỆN BÌNH THƯỜNG (Hiển thị lại nút chọn file nếu cần thao tác tiếp)
+                element.classList.remove('generating-pdf');
             }
         }
     </script>
